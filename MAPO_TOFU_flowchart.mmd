@@ -1,0 +1,53 @@
+graph TD;
+    %% Ingredients (rectangular nodes)
+    oil[Oil] --> toast_chilies
+    thai_chili[Thai Bird Chili Peppers] --> toast_chilies
+    dried_chilies[Dried Red Chilies] --> toast_chilies
+    toast_chilies(Toast Chilies - 5 min) --> chili_oil[Chili Oil]
+    oil --> fry_ginger_garlic
+    ginger[Ginger] --> fry_ginger_garlic
+    garlic[Garlic] --> fry_ginger_garlic
+    fry_ginger_garlic(Fry Ginger and Garlic - 2 min) --> fried_ginger_garlic[Fried Ginger and Garlic]
+    fried_ginger_garlic --> cook_pork
+    ground_pork[Ground Pork] --> cook_pork
+    cook_pork(Cook Pork - 5 min) --> cooked_pork[Cooked Pork]
+    cooked_pork --> add_peppercorns
+    sichuan_peppercorns[Sichuan Peppercorns] --> add_peppercorns
+    add_peppercorns(Add Sichuan Peppercorns - 1 min) --> seasoned_pork[Seasoned Pork]
+    seasoned_pork --> add_bean_sauce
+    spicy_bean_sauce[Spicy Bean Sauce] --> add_bean_sauce
+    add_bean_sauce(Add Spicy Bean Sauce - 1 min) --> sauced_pork[Sauced Pork]
+    sauced_pork --> simmer_broth
+    chicken_broth[Low Sodium Chicken Broth] --> simmer_broth
+    simmer_broth(Simmer with Broth - 1 min) --> simmered_sauce[Simmered Sauce]
+    water[Water] --> mix_cornstarch
+    cornstarch[Cornstarch] --> mix_cornstarch
+    mix_cornstarch(Mix Cornstarch - 1 min) --> cornstarch_mixture[Cornstarch Mixture]
+    simmered_sauce --> thicken_sauce
+    cornstarch_mixture --> thicken_sauce
+    thicken_sauce(Thicken Sauce - 2 min) --> thickened_sauce[Thickened Sauce]
+    thickened_sauce --> combine_chili_oil
+    chili_oil --> combine_chili_oil
+    combine_chili_oil(Combine Chili Oil - 1 min) --> combined_sauce[Combined Sauce]
+    combined_sauce --> add_tofu
+    silken_tofu[Silken Tofu] --> add_tofu
+    add_tofu(Add Tofu - 5 min) --> tofu_in_sauce[Tofu in Sauce]
+    tofu_in_sauce --> final_seasoning
+    sesame_oil[Sesame Oil] --> final_seasoning
+    sugar[Sugar] --> final_seasoning
+    scallion[Scallion] --> final_seasoning
+    final_seasoning(Final Seasoning - 1 min) --> mapo_tofu[Mapo Tofu]
+
+    %% Styling to distinguish ingredients from actions
+    classDef ingredient fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef action fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef final fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% Apply ingredient styling to all rectangular nodes
+    class oil,thai_chili,dried_chilies,chili_oil,ginger,garlic,fried_ginger_garlic,ground_pork,cooked_pork,sichuan_peppercorns,seasoned_pork,spicy_bean_sauce,sauced_pork,chicken_broth,simmered_sauce,water,cornstarch,cornstarch_mixture,thickened_sauce,combined_sauce,silken_tofu,tofu_in_sauce,sesame_oil,sugar,scallion ingredient
+
+    %% Apply action styling to all rounded nodes
+    class toast_chilies,fry_ginger_garlic,cook_pork,add_peppercorns,add_bean_sauce,simmer_broth,mix_cornstarch,thicken_sauce,combine_chili_oil,add_tofu,final_seasoning action
+
+    %% Apply final product styling
+    class mapo_tofu final

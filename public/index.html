@@ -681,7 +681,7 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
               .map(
                 (ingredient) => `
               <div class="ingredient-item">
-                <strong>${ingredient.name}</strong>
+                <strong>${ingredient.name}</strong> <span style="color: #667eea; font-weight: 600;">${ingredient.quantity || 'No quantity specified'}</span>
                 <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${ingredient.description}</div>
               </div>
             `
@@ -767,7 +767,7 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
               .map(
                 (ingredient) => `
               <div class="ingredient-item">
-                <strong>${ingredient.name}</strong>
+                <strong>${ingredient.name}</strong> <span style="color: #667eea; font-weight: 600;">${ingredient.quantity || 'No quantity specified'}</span>
                 <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${ingredient.description}</div>
               </div>
             `

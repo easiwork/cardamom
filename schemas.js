@@ -10,9 +10,10 @@ const recipeFlowchartSchema = {
         properties: {
           id: { type: "string" },
           name: { type: "string" },
+          quantity: { type: "string", description: "The amount/quantity of the ingredient (e.g., '1 cup', '2 tablespoons', '500g')" },
           description: { type: "string" },
         },
-        required: ["id", "name", "description"],
+        required: ["id", "name", "quantity", "description"],
         additionalProperties: false,
       },
     },

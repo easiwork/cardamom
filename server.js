@@ -34,13 +34,13 @@ async function processRecipeToFlowchart(recipeText) {
   const systemPrompt = `You are a culinary expert who transforms recipes into structured flowcharts. 
 
 Your task is to analyze a recipe and create a Mermaid flowchart that shows:
-1. All ingredients as nodes
+1. All ingredients as nodes (including their quantities)
 2. All cooking actions as nodes that transform ingredients
 3. The flow from raw ingredients to final dish
 4. Timing and parallel actions where applicable
 
 Rules for the flowchart:
-- Ingredients are represented as rectangular nodes with square brackets: [Ingredient Name]
+- Ingredients are represented as rectangular nodes with square brackets: [Ingredient Name - Quantity]
 - Actions are represented as rounded rectangular nodes with parentheses: (Action Name)
 - Include timing information in action node labels using format: "Action Name - X min"
 - Use different colors to distinguish ingredients from actions
@@ -50,6 +50,7 @@ Rules for the flowchart:
 - If durations differ, position outputs accordingly
 - Some actions might be "no-op" like "hold" or "warm up" that produce the same ingredient
 - The final product is also an ingredient node
+- IMPORTANT: Always include ingredient quantities in both the ingredient nodes and the structured data
 
 IMPORTANT MERMAID SYNTAX REQUIREMENTS:
 - Use simple node IDs without spaces or special characters (e.g., oil, toast_chilies, chili_oil)
@@ -69,11 +70,11 @@ Create a clear, logical flow that shows the transformation of ingredients throug
 ${recipeText}
 
 Return the response in the exact JSON schema format with:
-1. All ingredients with unique IDs, names, and descriptions
+1. All ingredients with unique IDs, names, quantities, and descriptions
 2. All actions with IDs, names, descriptions, durations, input/output ingredients
 3. A complete Mermaid flowchart diagram
 
-Focus on the logical flow and timing of the cooking process.`;
+Focus on the logical flow and timing of the cooking process. Make sure to extract and include the exact quantities for each ingredient as specified in the recipe.`;
 
   try {
     const completion = await openai.chat.completions.create({

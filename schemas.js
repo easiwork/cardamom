@@ -3,6 +3,10 @@
 const recipeFlowchartSchema = {
   type: "object",
   properties: {
+    recipeName: {
+      type: "string",
+      description: "A human-readable, descriptive name for the recipe (e.g., 'Classic Chocolate Chip Cookies', 'Spicy Thai Basil Chicken')"
+    },
     ingredients: {
       type: "array",
       items: {
@@ -56,7 +60,7 @@ const recipeFlowchartSchema = {
         "Complete Mermaid flowchart diagram code with proper styling. Use simple node IDs (no spaces), classDef for styling at the end, and class statements to apply styles. Format: graph TD; followed by node definitions, then classDef statements, then class applications.",
     },
   },
-  required: ["ingredients", "actions", "mermaidDiagram"],
+  required: ["recipeName", "ingredients", "actions", "mermaidDiagram"],
   additionalProperties: false,
 };
 

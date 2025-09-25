@@ -9,7 +9,9 @@ A web service that transforms recipes into beautiful Mermaid flowcharts using Op
 - 🤖 **AI-Powered**: Uses OpenAI GPT-4 with structured outputs for accurate parsing
 - 🎨 **Beautiful UI**: Modern, responsive web interface
 - 📁 **File Upload**: Support for text file uploads
+- 🌐 **URL Processing**: Direct recipe processing from URLs via query parameters
 - ⏱️ **Timing Information**: Shows duration and parallel actions
+- 💾 **Recipe Storage**: Save and browse your processed recipes
 
 ## Setup
 
@@ -46,6 +48,35 @@ A web service that transforms recipes into beautiful Mermaid flowcharts using Op
 
 4. **Access the Web Interface**
    Open http://localhost:3000 in your browser
+
+## Direct URL Processing
+
+You can process recipes directly from URLs by appending the recipe URL to your domain:
+
+```
+http://localhost:3000/https://example.com/recipe
+```
+
+This will automatically:
+1. Prefill the text box with the recipe URL
+2. Scrape the recipe from the provided URL
+3. Process it with AI to generate a flowchart
+4. Display the results immediately
+
+**Supported Recipe Websites:**
+- AllRecipes
+- Food Network
+- BBC Good Food
+- Most recipe websites with structured content
+
+**Example Usage:**
+```
+http://localhost:3000/https://www.allrecipes.com/recipe/213742/cheesy-chicken-broccoli-casserole/
+```
+
+**Pro Tip:** When browsing a recipe website, simply add your domain in front of the URL:
+- Original: `https://www.allrecipes.com/recipe/12345/chocolate-cake/`
+- Cardamom: `http://localhost:3000/https://www.allrecipes.com/recipe/12345/chocolate-cake/`
 
 ## API Endpoints
 
@@ -91,6 +122,22 @@ Process a recipe from text input.
 Process a recipe from uploaded file.
 
 **Request:** Multipart form data with `recipeFile`
+
+### GET `/api/process-url/*`
+
+Process a recipe directly from a URL via path parameter.
+
+**Path Parameter:**
+- The recipe URL is provided as the path after `/api/process-url/`
+
+**Example:**
+```
+GET /api/process-url/https://example.com/recipe
+```
+
+**Response:** Same as `/api/process-recipe` with additional fields:
+- `originalUrl`: The original recipe URL
+- `scrapedTitle`: The title extracted from the webpage
 
 ### GET `/api/health`
 

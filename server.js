@@ -6,6 +6,8 @@ const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const cookieParser = require("cookie-parser");
+const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 
 const { recipeFlowchartSchema } = require("./schemas");
@@ -21,12 +23,31 @@ const openai = new OpenAI({
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static("public"));
+
+// Device ID middleware - ensures each device has a unique identifier
+app.use((req, res, next) => {
+  if (!req.cookies.deviceId) {
+    const deviceId = uuidv4();
+    res.cookie('deviceId', deviceId, { 
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+      httpOnly: false, // Allow client-side access for localStorage
+      secure: false, // Set to true in production with HTTPS
+      sameSite: 'lax'
+    });
+    req.deviceId = deviceId;
+    console.log(`🆔 New device ID assigned: ${deviceId}`);
+  } else {
+    req.deviceId = req.cookies.deviceId;
+  }
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
-  console.log(`📡 ${timestamp} - ${req.method} ${req.path} - ${req.ip}`);
+  console.log(`📡 ${timestamp} - ${req.method} ${req.path} - ${req.ip} - Device: ${req.deviceId?.substring(0, 8)}...`);
   next();
 });
 
@@ -83,9 +104,10 @@ Create a clear, logical flow that shows the transformation of ingredients throug
 ${recipeText}
 
 Return the response in the exact JSON schema format with:
-1. All ingredients with unique IDs, names, quantities, and descriptions
-2. All actions with IDs, names, descriptions, durations, input/output ingredients
-3. A complete Mermaid flowchart diagram
+1. A descriptive, human-readable recipe name that captures the essence of the dish (e.g., "Classic Chocolate Chip Cookies", "Spicy Thai Basil Chicken", "Creamy Mushroom Risotto")
+2. All ingredients with unique IDs, names, quantities, and descriptions
+3. All actions with IDs, names, descriptions, durations, input/output ingredients
+4. A complete Mermaid flowchart diagram
 
 Focus on the logical flow and timing of the cooking process. Make sure to extract and include the exact quantities for each ingredient as specified in the recipe.`;
 
@@ -116,18 +138,23 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
     
     const result = JSON.parse(completion.choices[0].message.content);
     console.log("📋 Parsed result structure:");
+    console.log(`  - Recipe name: "${result.recipeName || 'Not provided'}"`);
     console.log(`  - Ingredients: ${result.ingredients?.length || 0} items`);
     console.log(`  - Actions: ${result.actions?.length || 0} items`);
     console.log(`  - Mermaid diagram length: ${result.mermaidDiagram?.length || 0} characters`);
 
-    // Extract recipe name from the input text for better file naming
-    const recipeName = recipeText
-      .split("\n")[0]
-      .trim()
-      .replace(/[^a-zA-Z0-9\s]/g, "")
-      .replace(/\s+/g, "_");
-    result.recipeName = recipeName || "recipe";
-    console.log(`📝 Extracted recipe name: "${result.recipeName}"`);
+    // Ensure we have a recipe name (fallback to extracted name if AI didn't provide one)
+    if (!result.recipeName) {
+      const fallbackName = recipeText
+        .split("\n")[0]
+        .trim()
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .replace(/\s+/g, "_");
+      result.recipeName = fallbackName || "recipe";
+      console.log(`📝 Using fallback recipe name: "${result.recipeName}"`);
+    } else {
+      console.log(`📝 AI-generated recipe name: "${result.recipeName}"`);
+    }
     
     // Log ingredient details
     if (result.ingredients && result.ingredients.length > 0) {
@@ -315,6 +342,56 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Route to handle direct recipe URL processing via path parameter
+app.get("/api/process-url/*", async (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n🌐 [${requestId}] Direct URL processing request`);
+  
+  try {
+    // Extract the URL from the path (everything after /api/process-url/)
+    const urlPath = req.params[0]; // This captures everything after the route
+    const recipeUrl = decodeURIComponent(urlPath);
+    
+    if (!recipeUrl) {
+      console.log(`❌ [${requestId}] Missing URL in path`);
+      return res.status(400).json({ error: "Recipe URL is required in the path" });
+    }
+
+    console.log(`🔗 [${requestId}] Processing URL: ${recipeUrl}`);
+
+    // Validate URL format
+    try {
+      const urlObj = new URL(recipeUrl);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        throw new Error('Invalid URL protocol');
+      }
+    } catch (urlError) {
+      console.log(`❌ [${requestId}] Invalid URL format: ${recipeUrl}`);
+      return res.status(400).json({ error: "Invalid URL format. Please provide a valid HTTP or HTTPS URL." });
+    }
+
+    // Scrape the recipe from the URL
+    const scrapedRecipe = await scrapeRecipeFromURL(recipeUrl);
+    console.log(`✅ [${requestId}] URL scraping completed`);
+    
+    // Process the scraped recipe
+    console.log(`🤖 [${requestId}] Starting AI processing of scraped content...`);
+    const result = await processRecipeToFlowchart(scrapedRecipe.content);
+    
+    // Add the original URL and scraped title to the result
+    result.originalUrl = scrapedRecipe.url;
+    result.scrapedTitle = scrapedRecipe.title;
+    
+    console.log(`🎉 [${requestId}] Direct URL processing completed successfully`);
+    console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
+    
+    res.json(result);
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error processing recipe URL:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/process-recipe", async (req, res) => {
   const requestId = Date.now().toString(36);
   console.log(`\n📥 [${requestId}] New recipe processing request`);
@@ -328,8 +405,37 @@ app.post("/api/process-recipe", async (req, res) => {
       return res.status(400).json({ error: "Recipe text is required" });
     }
 
+    // Check if the input is a URL
+    let processedRecipeText = recipeText;
+    let originalUrl = null;
+    let scrapedTitle = null;
+
+    try {
+      const url = new URL(recipeText.trim());
+      if (['http:', 'https:'].includes(url.protocol)) {
+        console.log(`🔗 [${requestId}] Detected URL input: ${recipeText}`);
+        
+        // Scrape the recipe from the URL
+        const scrapedRecipe = await scrapeRecipeFromURL(recipeText);
+        processedRecipeText = scrapedRecipe.content;
+        originalUrl = scrapedRecipe.url;
+        scrapedTitle = scrapedRecipe.title;
+        
+        console.log(`✅ [${requestId}] URL scraping completed`);
+      }
+    } catch (urlError) {
+      // Not a URL, treat as recipe text
+      console.log(`📝 [${requestId}] Treating input as recipe text`);
+    }
+
     console.log(`✅ [${requestId}] Starting recipe processing...`);
-    const result = await processRecipeToFlowchart(recipeText);
+    const result = await processRecipeToFlowchart(processedRecipeText);
+    
+    // Add URL metadata if this was scraped from a URL
+    if (originalUrl) {
+      result.originalUrl = originalUrl;
+      result.scrapedTitle = scrapedTitle;
+    }
     
     console.log(`🎉 [${requestId}] Recipe processing completed successfully`);
     console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
@@ -460,6 +566,84 @@ app.get("/api/example-flowchart", (req, res) => {
   }
 });
 
+// Recipe storage endpoints
+app.post("/api/save-recipe", (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n💾 [${requestId}] Save recipe request from device: ${req.deviceId?.substring(0, 8)}...`);
+  
+  try {
+    const { recipeData } = req.body;
+    
+    if (!recipeData) {
+      console.log(`❌ [${requestId}] Missing recipe data`);
+      return res.status(400).json({ error: "Recipe data is required" });
+    }
+
+    // Use the AI-generated recipe name from the data, or fallback to a default
+    const recipeName = recipeData.recipeName || recipeData.scrapedTitle || "Untitled Recipe";
+
+    // Add metadata to the recipe
+    const savedRecipe = {
+      id: uuidv4(),
+      name: recipeName,
+      data: recipeData,
+      deviceId: req.deviceId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    console.log(`✅ [${requestId}] Recipe saved: "${recipeName}" (ID: ${savedRecipe.id})`);
+    res.json({ 
+      success: true, 
+      recipeId: savedRecipe.id,
+      message: "Recipe saved successfully" 
+    });
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error saving recipe:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/saved-recipes", (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n📚 [${requestId}] Get saved recipes request from device: ${req.deviceId?.substring(0, 8)}...`);
+  
+  try {
+    // In a real implementation, you'd query a database
+    // For now, we'll return a message indicating the client should use localStorage
+    console.log(`✅ [${requestId}] Returning localStorage instructions`);
+    res.json({ 
+      message: "Use localStorage to manage saved recipes",
+      deviceId: req.deviceId,
+      instructions: "Recipes are stored in browser localStorage with device-specific keys"
+    });
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error getting saved recipes:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/delete-recipe/:recipeId", (req, res) => {
+  const requestId = Date.now().toString(36);
+  const { recipeId } = req.params;
+  
+  console.log(`\n🗑️ [${requestId}] Delete recipe request: ${recipeId} from device: ${req.deviceId?.substring(0, 8)}...`);
+  
+  try {
+    // In a real implementation, you'd delete from database
+    // For now, we'll return success and let the client handle localStorage deletion
+    console.log(`✅ [${requestId}] Recipe deletion handled by client localStorage`);
+    res.json({ 
+      success: true, 
+      message: "Recipe deleted successfully",
+      recipeId: recipeId
+    });
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error deleting recipe:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   const healthData = { 
@@ -471,6 +655,21 @@ app.get("/api/health", (req, res) => {
   };
   console.log("💚 Health check requested");
   res.json(healthData);
+});
+
+// Catch-all route for recipe URLs - serve the main page for any path that looks like a URL
+app.get("/*", (req, res) => {
+  const urlPath = req.params[0];
+  
+  // Check if the path looks like a URL (starts with http:// or https://)
+  if (urlPath && (urlPath.startsWith('http://') || urlPath.startsWith('https://'))) {
+    console.log(`🔗 Recipe URL detected in path: ${urlPath}`);
+    // Serve the main page - the frontend will handle the URL processing
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  } else {
+    // For any other path, serve the main page
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  }
 });
 
 app.listen(port, () => {
@@ -485,6 +684,9 @@ app.listen(port, () => {
   console.log("   ✅ File upload processing");
   console.log("   ✅ URL scraping and processing");
   console.log("   ✅ Ingredient quantity extraction");
+  console.log("   ✅ Device-based recipe storage");
+  console.log("   ✅ localStorage recipe management");
+  console.log("   ✅ Recipe browsing and history");
   console.log("   ✅ Comprehensive logging");
   console.log("🚀 ================================================\n");
 });

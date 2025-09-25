@@ -12,6 +12,59 @@ require("dotenv").config();
 
 const { recipeFlowchartSchema } = require("./schemas");
 
+// Function to sanitize Mermaid diagrams
+function sanitizeMermaidDiagram(diagram) {
+  if (!diagram) return diagram;
+  
+  try {
+    // Fix common issues with node labels containing special characters
+    let sanitized = diagram;
+    
+    // First, fix double-quoted labels that are already escaped
+    // Pattern: nodeId["\"Label with quotes\""] --> nodeId["Label with quotes"]
+    sanitized = sanitized.replace(/(\w+)\[\"\\\"([^\"]*)\\\"\"\]/g, (match, nodeId, label) => {
+      return `${nodeId}["${label}"]`;
+    });
+    
+    // Fix unquoted labels with parentheses, brackets, or special characters
+    // Pattern: nodeId[Label with (parentheses) or [brackets]] --> 
+    sanitized = sanitized.replace(/(\w+)\[([^\]]*[\(\)\[\]<>].*?)\]/g, (match, nodeId, label) => {
+      // Skip if already quoted
+      if (label.startsWith('"') && label.endsWith('"')) {
+        return match;
+      }
+      // Escape quotes in the label and wrap in quotes
+      const escapedLabel = label.replace(/"/g, '\\"');
+      return `${nodeId}["${escapedLabel}"]`;
+    });
+    
+    // Fix unquoted action labels with special characters
+    // Pattern: nodeId(Action with (parentheses) or special chars) -->
+    sanitized = sanitized.replace(/(\w+)\(([^)]*[\(\)\[\]<>].*?)\)/g, (match, nodeId, label) => {
+      // Skip if already quoted
+      if (label.startsWith('"') && label.endsWith('"')) {
+        return match;
+      }
+      // Escape quotes in the label and wrap in quotes
+      const escapedLabel = label.replace(/"/g, '\\"');
+      return `${nodeId}("${escapedLabel}")`;
+    });
+    
+    // Ensure proper line endings
+    sanitized = sanitized.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    // Remove any trailing semicolons that might cause issues
+    sanitized = sanitized.replace(/;(\s*)$/, '$1');
+    
+    console.log("🔧 Sanitized Mermaid diagram - original length:", diagram.length, "new length:", sanitized.length);
+    
+    return sanitized;
+  } catch (error) {
+    console.error("❌ Error sanitizing Mermaid diagram:", error);
+    return diagram; // Return original if sanitization fails
+  }
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -88,6 +141,8 @@ Rules for the flowchart:
 
 IMPORTANT MERMAID SYNTAX REQUIREMENTS:
 - Use simple node IDs without spaces or special characters (e.g., oil, toast_chilies, chili_oil)
+- For node labels with quantities, use quotes to escape special characters: [\"Ingredient Name - 1 cup (240ml)\"]
+- NEVER use parentheses, brackets, or special characters in node IDs - only in quoted labels
 - Apply styling using classDef at the end, not inline with ::: syntax
 - Use this exact format:
   classDef ingredient fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
@@ -96,6 +151,7 @@ IMPORTANT MERMAID SYNTAX REQUIREMENTS:
 - Apply classes using: class nodeId1,nodeId2,nodeId3 ingredient
 - Keep node names simple and descriptive
 - Ensure all node references are consistent throughout the diagram
+- Example correct syntax: tofu[\"Soft Tofu - 1 block (14 oz)\"] --> simmer_tofu(\"Simmer Tofu - 5 min\")
 
 Create a clear, logical flow that shows the transformation of ingredients through cooking steps.`;
 
@@ -142,6 +198,12 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
     console.log(`  - Ingredients: ${result.ingredients?.length || 0} items`);
     console.log(`  - Actions: ${result.actions?.length || 0} items`);
     console.log(`  - Mermaid diagram length: ${result.mermaidDiagram?.length || 0} characters`);
+
+    // Sanitize the Mermaid diagram to fix common syntax issues
+    if (result.mermaidDiagram) {
+      result.mermaidDiagram = sanitizeMermaidDiagram(result.mermaidDiagram);
+      console.log("🔧 Sanitized Mermaid diagram");
+    }
 
     // Ensure we have a recipe name (fallback to extracted name if AI didn't provide one)
     if (!result.recipeName) {

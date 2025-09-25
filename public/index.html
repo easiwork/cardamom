@@ -13,93 +13,162 @@
       }
 
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         min-height: 100vh;
-        padding: 20px;
+        padding: 0;
+        overflow-x: hidden;
       }
 
       .container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
         overflow: hidden;
+        margin-top: 20px;
+        margin-bottom: 20px;
       }
 
       .header {
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         color: white;
-        padding: 30px;
+        padding: 60px 40px;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
       }
 
       .header h1 {
-        font-size: 2.5em;
-        margin-bottom: 10px;
-        font-weight: 300;
+        font-size: 3.5em;
+        margin-bottom: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(45deg, #ffffff, #f8f9fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .header p {
-        font-size: 1.1em;
-        opacity: 0.9;
+        font-size: 1.3em;
+        opacity: 0.95;
+        font-weight: 400;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .content {
-        padding: 40px;
+        padding: 60px 40px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
       }
 
       .input-section {
-        margin-bottom: 40px;
+        margin-bottom: 60px;
       }
 
       .input-group {
-        margin-bottom: 20px;
+        margin-bottom: 32px;
       }
 
       label {
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
         font-weight: 600;
-        color: #333;
+        color: #1a202c;
+        font-size: 1.1em;
+        letter-spacing: -0.01em;
       }
 
       textarea {
         width: 100%;
-        min-height: 200px;
-        padding: 15px;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-family: "Courier New", monospace;
-        font-size: 14px;
+        min-height: 240px;
+        padding: 24px;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
         resize: vertical;
-        transition: border-color 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       }
 
       textarea:focus {
         outline: none;
         border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      textarea::placeholder {
+        color: #a0aec0;
+        font-style: italic;
       }
 
       input[type="url"]:focus {
         outline: none;
         border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
       }
 
       .file-upload {
         position: relative;
         display: inline-block;
         cursor: pointer;
-        background: #667eea;
+        background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        transition: background 0.3s ease;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        border: none;
+        overflow: hidden;
+      }
+
+      .file-upload::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .file-upload:hover::before {
+        left: 100%;
       }
 
       .file-upload:hover {
-        background: #5a6fd8;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
       }
 
       .file-upload input[type="file"] {
@@ -111,41 +180,74 @@
         background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
         border: none;
-        padding: 15px 30px;
-        border-radius: 8px;
+        padding: 18px 36px;
+        border-radius: 12px;
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        margin-right: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-right: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
       }
 
       .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(-1px);
       }
 
       .btn:disabled {
-        background: #ccc;
+        background: linear-gradient(135deg, #cbd5e0, #a0aec0);
         cursor: not-allowed;
         transform: none;
-        box-shadow: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn:disabled::before {
+        display: none;
       }
 
       .loading {
         display: none;
         text-align: center;
-        padding: 20px;
+        padding: 60px 20px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        margin: 40px 0;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
       .spinner {
-        border: 4px solid #f3f3f3;
+        border: 4px solid rgba(102, 126, 234, 0.1);
         border-top: 4px solid #667eea;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 60px;
+        height: 60px;
         animation: spin 1s linear infinite;
-        margin: 0 auto 10px;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
       }
 
       @keyframes spin {
@@ -157,97 +259,169 @@
         }
       }
 
+      .loading p {
+        font-size: 1.2em;
+        color: #4a5568;
+        font-weight: 500;
+        margin: 0;
+      }
+
       .result-section {
-        margin-top: 40px;
-        padding-top: 40px;
-        border-top: 2px solid #e1e5e9;
+        margin-top: 60px;
+        padding-top: 60px;
+        border-top: 1px solid rgba(226, 232, 240, 0.8);
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 20px;
+        padding: 40px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
       }
 
       .result-section h2 {
-        color: #333;
-        margin-bottom: 20px;
-        font-size: 1.8em;
+        color: #1a202c;
+        margin-bottom: 32px;
+        font-size: 2.2em;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-align: center;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .mermaid-container {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
         overflow-x: auto;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        backdrop-filter: blur(10px);
       }
 
       .ingredients-list,
       .actions-list {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        backdrop-filter: blur(10px);
       }
 
       .ingredients-list h3,
       .actions-list h3 {
-        color: #333;
-        margin-bottom: 15px;
-        font-size: 1.3em;
+        color: #1a202c;
+        margin-bottom: 24px;
+        font-size: 1.5em;
+        font-weight: 700;
+        letter-spacing: -0.01em;
       }
 
       .ingredient-item,
       .action-item {
-        background: white;
-        padding: 10px 15px;
-        margin-bottom: 8px;
-        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        border-radius: 12px;
         border-left: 4px solid #667eea;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .ingredient-item:hover,
+      .action-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
       }
 
       .action-item {
-        border-left-color: #ff6b6b;
+        border-left-color: #f093fb;
       }
 
       .error {
-        background: #ffe6e6;
-        color: #d63031;
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 4px solid #d63031;
-        margin-top: 20px;
+        background: linear-gradient(135deg, #fed7d7, #feb2b2);
+        color: #c53030;
+        padding: 24px;
+        border-radius: 16px;
+        border-left: 4px solid #e53e3e;
+        margin: 32px 0;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 1000;
+      }
+
+      .success {
+        background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+        color: #22543d;
+        padding: 24px;
+        border-radius: 16px;
+        border-left: 4px solid #38a169;
+        margin: 32px 0;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(56, 161, 105, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 1000;
       }
 
       .example-recipe {
-        background: #e8f4f8;
-        border: 1px solid #bee5eb;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.1);
       }
 
       .example-recipe h4 {
-        color: #0c5460;
-        margin-bottom: 10px;
+        color: #1a202c;
+        margin-bottom: 16px;
+        font-size: 1.3em;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .example-recipe p {
+        color: #4a5568;
+        margin-bottom: 20px;
+        line-height: 1.6;
       }
 
       .example-recipe button {
-        background: #17a2b8;
+        background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
         border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
+        padding: 12px 24px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
-        margin-right: 10px;
+        font-weight: 600;
+        margin-right: 12px;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
       }
 
       .example-recipe button:hover {
-        background: #138496;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
       }
 
       .example-recipe button.green {
-        background: #28a745;
+        background: linear-gradient(135deg, #48bb78, #38a169);
+        box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
       }
 
       .example-recipe button.green:hover {
-        background: #218838;
+        box-shadow: 0 4px 16px rgba(72, 187, 120, 0.4);
       }
 
       /* Table styling */
@@ -460,13 +634,158 @@
         font-size: 1.1em;
         margin: 0;
       }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          margin: 10px;
+          border-radius: 16px;
+        }
+
+        .header {
+          padding: 40px 20px;
+        }
+
+        .header h1 {
+          font-size: 2.5em;
+        }
+
+        .header p {
+          font-size: 1.1em;
+        }
+
+        .content {
+          padding: 40px 20px;
+        }
+
+        .btn {
+          width: 100%;
+          margin-right: 0;
+          margin-bottom: 12px;
+        }
+
+        .file-upload {
+          width: 100%;
+          text-align: center;
+        }
+
+        textarea {
+          min-height: 200px;
+          padding: 20px;
+        }
+
+        .mermaid-container,
+        .ingredients-list,
+        .actions-list {
+          padding: 20px;
+        }
+
+        .result-section {
+          padding: 20px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .header p {
+          font-size: 1em;
+        }
+
+        .content {
+          padding: 20px 15px;
+        }
+
+        .btn {
+          padding: 16px 24px;
+          font-size: 14px;
+        }
+      }
+
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #5a6fd8, #6b46a3);
+      }
+
+      /* Toast notification */
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 12px;
+        padding: 16px 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 10000;
+        transform: translateX(400px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 400px;
+        font-weight: 500;
+      }
+
+      .toast.show {
+        transform: translateX(0);
+      }
+
+      .toast.success {
+        border-left: 4px solid #38a169;
+        color: #22543d;
+      }
+
+      .toast.error {
+        border-left: 4px solid #e53e3e;
+        color: #c53030;
+      }
+
+      .toast.info {
+        border-left: 4px solid #3182ce;
+        color: #2c5282;
+      }
+
+      @media (max-width: 768px) {
+        .toast {
+          right: 10px;
+          left: 10px;
+          max-width: none;
+          transform: translateY(-100px);
+        }
+
+        .toast.show {
+          transform: translateY(0);
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>🍳 Recipe Flowchart Generator</h1>
-        <p>Transform your recipes into beautiful Mermaid flowcharts using AI</p>
+        <div class="header-content">
+          <h1>🍳 Recipe Flowchart Generator</h1>
+          <p>Transform your recipes into beautiful Mermaid flowcharts using AI</p>
+        </div>
       </div>
 
       <div class="content">
@@ -1174,10 +1493,46 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
         resultSection.style.display = "block";
       }
 
+      // Toast notification functions
+      function showToast(message, type = 'info', duration = 4000) {
+        // Remove any existing toast
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+          existingToast.remove();
+        }
+
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 100);
+        
+        // Auto remove
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            if (toast.parentNode) {
+              toast.remove();
+            }
+          }, 300);
+        }, duration);
+      }
+
       function showError(message) {
+        // Show both inline error and toast
         const errorMessage = document.getElementById("errorMessage");
         errorMessage.textContent = message;
         errorMessage.style.display = "block";
+        errorMessage.className = "error";
+        
+        // Also show toast notification
+        showToast(message, 'error', 5000);
       }
 
       function downloadMermaidCode() {
@@ -1426,16 +1781,19 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
 
       // Show success message
       function showSuccess(message) {
+        // Show toast notification (primary method)
+        showToast(message, 'success', 4000);
+        
+        // Also show inline message for consistency
         const errorMessage = document.getElementById("errorMessage");
         errorMessage.textContent = message;
         errorMessage.style.display = "block";
-        errorMessage.style.background = "#d4edda";
-        errorMessage.style.color = "#155724";
-        errorMessage.style.borderLeftColor = "#28a745";
+        errorMessage.className = "success";
         
         setTimeout(() => {
           errorMessage.style.display = "none";
-        }, 3000);
+          errorMessage.className = "error"; // Reset to error class
+        }, 4000);
       }
 
       // Close modal when clicking outside

@@ -82,6 +82,11 @@
         border-color: #667eea;
       }
 
+      input[type="url"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
       .file-upload {
         position: relative;
         display: inline-block;
@@ -339,6 +344,26 @@
           </div>
 
           <div class="input-group">
+            <label for="recipeUrl">🌐 Or enter a recipe URL:</label>
+            <input
+              type="url"
+              id="recipeUrl"
+              placeholder="https://example.com/recipe"
+              style="
+                width: 100%;
+                padding: 15px;
+                border: 2px solid #e1e5e9;
+                border-radius: 8px;
+                font-size: 16px;
+                transition: border-color 0.3s ease;
+              "
+            />
+            <div style="margin-top: 8px; font-size: 0.9em; color: #666;">
+              Supports most recipe websites including AllRecipes, Food Network, BBC Good Food, and more.
+            </div>
+          </div>
+
+          <div class="input-group">
             <label>📁 Or upload a recipe file:</label>
             <div class="file-upload">
               <input
@@ -443,6 +468,7 @@
       let currentHtmlTable = null;
       let currentRecipeName = null;
       let currentViewMode = "flowchart"; // 'flowchart' or 'table'
+      let currentRecipeData = null; // Store complete recipe data for saving
 
       function loadExampleRecipe() {
         const exampleRecipe = `MAPO TOFU
@@ -523,14 +549,21 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
 
       async function processRecipe() {
         const recipeText = document.getElementById("recipeText").value.trim();
+        const recipeUrl = document.getElementById("recipeUrl").value.trim();
         const processBtn = document.getElementById("processBtn");
         const processTableBtn = document.getElementById("processTableBtn");
         const loading = document.getElementById("loading");
         const resultSection = document.getElementById("resultSection");
         const errorMessage = document.getElementById("errorMessage");
 
-        if (!recipeText && !uploadedFile) {
-          showError("Please enter a recipe or upload a file.");
+        if (!recipeText && !uploadedFile && !recipeUrl) {
+          showError("Please enter a recipe, upload a file, or provide a recipe URL.");
+          return;
+        }
+
+        // If URL is provided, process it instead
+        if (recipeUrl) {
+          await processRecipeFromURL(recipeUrl);
           return;
         }
 
@@ -581,16 +614,64 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
         }
       }
 
-      async function processRecipeTable() {
-        const recipeText = document.getElementById("recipeText").value.trim();
+      async function processRecipeFromURL(recipeUrl) {
         const processBtn = document.getElementById("processBtn");
         const processTableBtn = document.getElementById("processTableBtn");
         const loading = document.getElementById("loading");
         const resultSection = document.getElementById("resultSection");
         const errorMessage = document.getElementById("errorMessage");
 
-        if (!recipeText && !uploadedFile) {
-          showError("Please enter a recipe or upload a file.");
+        // Show loading state
+        processBtn.disabled = true;
+        processTableBtn.disabled = true;
+        loading.style.display = "block";
+        resultSection.style.display = "none";
+        errorMessage.style.display = "none";
+
+        try {
+          const response = await fetch("/api/process-recipe-url", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ recipeUrl }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to process recipe URL");
+          }
+
+          const result = await response.json();
+          currentViewMode = "flowchart";
+          displayResult(result);
+        } catch (error) {
+          showError(`Error: ${error.message}`);
+        } finally {
+          processBtn.disabled = false;
+          processTableBtn.disabled = false;
+          loading.style.display = "none";
+        }
+      }
+
+      async function processRecipeTable() {
+        const recipeText = document.getElementById("recipeText").value.trim();
+        const recipeUrl = document.getElementById("recipeUrl").value.trim();
+        const processBtn = document.getElementById("processBtn");
+        const processTableBtn = document.getElementById("processTableBtn");
+        const loading = document.getElementById("loading");
+        const resultSection = document.getElementById("resultSection");
+        const errorMessage = document.getElementById("errorMessage");
+
+        if (!recipeText && !uploadedFile && !recipeUrl) {
+          showError("Please enter a recipe, upload a file, or provide a recipe URL.");
+          return;
+        }
+
+        // If URL is provided, we need to scrape it first
+        if (recipeUrl) {
+          // For now, show error for URL + table combination
+          showError("Table view is not yet supported for recipe URLs. Please use the flowchart view.");
           return;
         }
 
@@ -661,7 +742,7 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
 
         // Store the Mermaid code and recipe name for download
         currentMermaidCode = result.mermaidDiagram;
-        currentRecipeName = result.recipeName || "recipe";
+        currentRecipeName = result.recipeName || result.scrapedTitle || "recipe";
 
         // Clear the container and render new Mermaid diagram
         mermaidContainer.innerHTML = "";
@@ -720,6 +801,24 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
           `;
         } else {
           actionsList.innerHTML = "";
+        }
+
+        // Show source information if available
+        if (result.originalUrl) {
+          const sourceInfo = document.createElement("div");
+          sourceInfo.style.cssText = `
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+          `;
+          sourceInfo.innerHTML = `
+            <strong>📄 Source:</strong> <a href="${result.originalUrl}" target="_blank" style="color: #17a2b8;">${result.originalUrl}</a>
+            ${result.scrapedTitle ? `<br><strong>📝 Title:</strong> ${result.scrapedTitle}` : ''}
+          `;
+          resultSection.insertBefore(sourceInfo, resultSection.firstChild);
         }
 
         resultSection.style.display = "block";
@@ -940,6 +1039,7 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
 
       function clearAll() {
         document.getElementById("recipeText").value = "";
+        document.getElementById("recipeUrl").value = "";
         document.getElementById("recipeFile").value = "";
         document.getElementById("fileName").textContent = "";
         document.getElementById("resultSection").style.display = "none";

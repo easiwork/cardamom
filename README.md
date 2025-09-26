@@ -58,23 +58,27 @@ http://localhost:3000/https://example.com/recipe
 ```
 
 This will automatically:
+
 1. Prefill the text box with the recipe URL
 2. Scrape the recipe from the provided URL
 3. Process it with AI to generate a flowchart
 4. Display the results immediately
 
 **Supported Recipe Websites:**
+
 - AllRecipes
 - Food Network
 - BBC Good Food
 - Most recipe websites with structured content
 
 **Example Usage:**
+
 ```
 http://localhost:3000/https://www.allrecipes.com/recipe/213742/cheesy-chicken-broccoli-casserole/
 ```
 
 **Pro Tip:** When browsing a recipe website, simply add your domain in front of the URL:
+
 - Original: `https://www.allrecipes.com/recipe/12345/chocolate-cake/`
 - Cardamom: `http://localhost:3000/https://www.allrecipes.com/recipe/12345/chocolate-cake/`
 
@@ -128,14 +132,17 @@ Process a recipe from uploaded file.
 Process a recipe directly from a URL via path parameter.
 
 **Path Parameter:**
+
 - The recipe URL is provided as the path after `/api/process-url/`
 
 **Example:**
+
 ```
 GET /api/process-url/https://example.com/recipe
 ```
 
 **Response:** Same as `/api/process-recipe` with additional fields:
+
 - `originalUrl`: The original recipe URL
 - `scrapedTitle`: The title extracted from the webpage
 

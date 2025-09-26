@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Recipe Flowchart Generator</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.4.0/dist/mermaid.min.js"></script>
+    <script>
+      // Check if Mermaid is loaded
+      window.addEventListener("load", function () {
+        if (typeof mermaid === "undefined") {
+          console.error("Mermaid library failed to load");
+        } else {
+          console.log("Mermaid library loaded successfully");
+        }
+      });
+    </script>
     <style>
       * {
         margin: 0;
@@ -13,719 +23,645 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        min-height: 100vh;
-        padding: 0;
-        overflow-x: hidden;
-      }
-
-      .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        height: 100vh;
         overflow: hidden;
-        margin-top: 20px;
-        margin-bottom: 20px;
+        -webkit-app-region: no-drag;
       }
 
-      .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        color: white;
-        padding: 60px 40px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        opacity: 0.3;
-      }
-
-      .header-content {
-        position: relative;
-        z-index: 1;
-      }
-
-      .header h1 {
-        font-size: 3.5em;
-        margin-bottom: 20px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(45deg, #ffffff, #f8f9fa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .header p {
-        font-size: 1.3em;
-        opacity: 0.95;
-        font-weight: 400;
-        max-width: 600px;
-        margin: 0 auto;
-        line-height: 1.6;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .content {
-        padding: 60px 40px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
-      }
-
-      .input-section {
-        margin-bottom: 60px;
-      }
-
-      .input-group {
-        margin-bottom: 32px;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 12px;
-        font-weight: 600;
-        color: #1a202c;
-        font-size: 1.1em;
-        letter-spacing: -0.01em;
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 240px;
-        padding: 24px;
-        border: 2px solid #e2e8f0;
-        border-radius: 16px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 16px;
-        line-height: 1.6;
-        resize: vertical;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      }
-
-      textarea:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-      }
-
-      textarea::placeholder {
-        color: #a0aec0;
-        font-style: italic;
-      }
-
-      input[type="url"]:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      .file-upload {
-        position: relative;
-        display: inline-block;
-        cursor: pointer;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 16px 32px;
+      /* Mac Native Window Styling */
+      .mac-window {
+        background: #f5f5f7;
         border-radius: 12px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        border: none;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
 
-      .file-upload::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
+      .mac-titlebar {
+        background: #e5e5e7;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border-radius: 12px 12px 0 0;
+        -webkit-app-region: drag;
       }
 
-      .file-upload:hover::before {
-        left: 100%;
+      .mac-controls {
+        display: flex;
+        gap: 8px;
       }
 
-      .file-upload:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-      }
-
-      .file-upload input[type="file"] {
-        position: absolute;
-        left: -9999px;
-      }
-
-      .btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        padding: 18px 36px;
-        border-radius: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-right: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-      }
-
-      .btn:hover::before {
-        left: 100%;
-      }
-
-      .btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4);
-      }
-
-      .btn:active {
-        transform: translateY(-1px);
-      }
-
-      .btn:disabled {
-        background: linear-gradient(135deg, #cbd5e0, #a0aec0);
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .btn:disabled::before {
-        display: none;
-      }
-
-      .loading {
-        display: none;
-        text-align: center;
-        padding: 60px 20px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        margin: 40px 0;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      }
-
-      .spinner {
-        border: 4px solid rgba(102, 126, 234, 0.1);
-        border-top: 4px solid #667eea;
+      .mac-control {
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 20px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        -webkit-app-region: no-drag;
       }
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      .mac-control.close {
+        background: #ff5f57;
       }
 
-      .loading p {
-        font-size: 1.2em;
-        color: #4a5568;
-        font-weight: 500;
-        margin: 0;
+      .mac-control.minimize {
+        background: #ffbd2e;
       }
 
-      .result-section {
-        margin-top: 60px;
-        padding-top: 60px;
-        border-top: 1px solid rgba(226, 232, 240, 0.8);
-        background: rgba(255, 255, 255, 0.6);
-        border-radius: 20px;
-        padding: 40px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      .mac-control.maximize {
+        background: #28ca42;
       }
 
-      .result-section h2 {
-        color: #1a202c;
-        margin-bottom: 32px;
-        font-size: 2.2em;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        text-align: center;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+      .app-container {
+        display: flex;
+        flex: 1;
+        height: calc(100vh - 28px);
       }
 
-      .mermaid-container {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 32px;
-        margin-bottom: 32px;
-        overflow-x: auto;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        backdrop-filter: blur(10px);
+      /* Left Sidebar - Recipe Cards */
+      .sidebar {
+        width: 320px;
+        background: #ffffff;
+        border-right: 1px solid #e5e5e7;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
-      .ingredients-list,
-      .actions-list {
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 16px;
-        padding: 32px;
-        margin-bottom: 32px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        backdrop-filter: blur(10px);
+      .sidebar-header {
+        padding: 24px 20px 16px;
+        border-bottom: 1px solid #e5e5e7;
+        background: #ffffff;
       }
 
-      .ingredients-list h3,
-      .actions-list h3 {
-        color: #1a202c;
-        margin-bottom: 24px;
-        font-size: 1.5em;
-        font-weight: 700;
-        letter-spacing: -0.01em;
+      .sidebar-header h1 {
+        font-size: 1.4em;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 4px;
       }
 
-      .ingredient-item,
-      .action-item {
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px 24px;
-        margin-bottom: 16px;
-        border-radius: 12px;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
+      .sidebar-header p {
+        font-size: 0.85em;
+        color: #86868b;
+        line-height: 1.4;
       }
 
-      .ingredient-item:hover,
-      .action-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      }
-
-      .action-item {
-        border-left-color: #f093fb;
-      }
-
-      .error {
-        background: linear-gradient(135deg, #fed7d7, #feb2b2);
-        color: #c53030;
-        padding: 24px;
-        border-radius: 16px;
-        border-left: 4px solid #e53e3e;
-        margin: 32px 0;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
-        backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 1000;
-      }
-
-      .success {
-        background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
-        color: #22543d;
-        padding: 24px;
-        border-radius: 16px;
-        border-left: 4px solid #38a169;
-        margin: 32px 0;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(56, 161, 105, 0.2);
-        backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 1000;
-      }
-
-      .example-recipe {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        border-radius: 16px;
-        padding: 32px;
-        margin-bottom: 32px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.1);
-      }
-
-      .example-recipe h4 {
-        color: #1a202c;
-        margin-bottom: 16px;
-        font-size: 1.3em;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-      }
-
-      .example-recipe p {
-        color: #4a5568;
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-
-      .example-recipe button {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
+      .new-recipe-btn {
+        width: 100%;
+        background: #007aff;
         border: none;
-        padding: 12px 24px;
+        color: white;
+        padding: 12px 16px;
         border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
-        font-weight: 600;
-        margin-right: 12px;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        font-weight: 500;
+        margin: 16px 20px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
       }
 
-      .example-recipe button:hover {
+      .new-recipe-btn:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+      }
+
+      .recipes-section {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px 20px;
+      }
+
+      .recipes-section h3 {
+        font-size: 0.8em;
+        color: #86868b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        padding: 0 4px;
+      }
+
+      .recipe-card {
+        background: #ffffff;
+        border: 1px solid #e5e5e7;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .recipe-card:hover {
+        background: #f9f9f9;
+        border-color: #007aff;
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
-      .example-recipe button.green {
-        background: linear-gradient(135deg, #48bb78, #38a169);
-        box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+      .recipe-card.active {
+        background: #e3f2fd;
+        border-color: #007aff;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
       }
 
-      .example-recipe button.green:hover {
-        box-shadow: 0 4px 16px rgba(72, 187, 120, 0.4);
-      }
-
-      /* Table styling */
-      #table-container table {
-        border-collapse: collapse;
+      .recipe-card-image {
         width: 100%;
-        margin: 0 auto;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
-
-      #table-container th,
-      #table-container td {
-        border: 1px solid #ddd;
-        padding: 12px;
-        text-align: left;
-        vertical-align: top;
-      }
-
-      #table-container th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-        color: #333;
-        border-bottom: 2px solid #dee2e6;
-      }
-
-      #table-container .ingredient-cell {
-        background-color: #e1f5fe;
-        color: #01579b;
-        font-weight: 500;
-        border-left: 3px solid #01579b;
-      }
-
-      #table-container .step-cell {
-        background-color: #fff3e0;
-        color: #e65100;
-        font-weight: 500;
-        border-left: 3px solid #e65100;
-      }
-
-      #table-container .final-cell {
-        background-color: #e8f5e8;
-        color: #2e7d32;
-        font-weight: 600;
-        border-left: 3px solid #2e7d32;
-        text-align: center;
-      }
-
-      #table-container .step-header {
-        background-color: #f8f9fa;
-        color: #495057;
-        font-weight: 600;
-        text-align: center;
-        border-bottom: 2px solid #dee2e6;
-      }
-
-      #table-container tr:hover {
-        background-color: #f5f5f5;
-      }
-
-      #table-container tr:hover .ingredient-cell,
-      #table-container tr:hover .step-cell,
-      #table-container tr:hover .final-cell {
-        background-color: inherit;
-      }
-
-      /* Modal styles */
-      .modal {
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(5px);
-      }
-
-      .modal-content {
-        background-color: white;
-        margin: 5% auto;
-        padding: 0;
-        border-radius: 15px;
-        width: 90%;
-        max-width: 800px;
-        max-height: 80vh;
+        height: 120px;
+        background: #f5f5f7;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #86868b;
+        font-size: 0.8em;
         overflow: hidden;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
       }
 
-      .modal-header {
-        background: linear-gradient(135deg, #6f42c1, #5a32a3);
-        color: white;
-        padding: 20px 30px;
+      .recipe-card-title {
+        font-size: 0.95em;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .recipe-card-meta {
+        font-size: 0.75em;
+        color: #86868b;
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
 
-      .modal-header h2 {
-        margin: 0;
-        font-size: 1.5em;
-        font-weight: 300;
+      .recipe-card-date {
+        font-size: 0.7em;
       }
 
-      .close {
-        color: white;
-        font-size: 28px;
-        font-weight: bold;
+      .recipe-card-actions {
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .recipe-card:hover .recipe-card-actions {
+        opacity: 1;
+      }
+
+      .recipe-card-btn {
+        background: transparent;
+        border: none;
+        color: #86868b;
         cursor: pointer;
-        transition: opacity 0.3s ease;
+        padding: 4px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        transition: all 0.2s ease;
       }
 
-      .close:hover {
-        opacity: 0.7;
+      .recipe-card-btn:hover {
+        background: #e5e5e7;
+        color: #1d1d1f;
       }
 
-      .modal-body {
-        padding: 30px;
-        max-height: 60vh;
+      .recipe-card-btn.delete:hover {
+        background: #ff3b30;
+        color: white;
+      }
+
+      /* Main Content Area */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #f5f5f7;
+      }
+
+      /* Expanded Recipe View */
+      .expanded-recipe-view {
+        height: 400px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e5e7;
+        display: none;
+        flex-direction: row;
+        overflow: hidden;
+      }
+
+      .expanded-recipe-view.active {
+        display: flex;
+      }
+
+      .recipe-details-panel {
+        flex: 1;
+        padding: 24px;
         overflow-y: auto;
       }
 
-      .saved-recipes-list {
-        display: grid;
-        gap: 15px;
+      .recipe-details-header {
+        margin-bottom: 20px;
       }
 
-      .saved-recipe-item {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
-        padding: 20px;
-        transition: all 0.3s ease;
-        cursor: pointer;
+      .recipe-details-title {
+        font-size: 1.8em;
+        font-weight: 700;
+        color: #1d1d1f;
+        margin-bottom: 8px;
       }
 
-      .saved-recipe-item:hover {
-        background: #e9ecef;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      }
-
-      .saved-recipe-header {
+      .recipe-details-meta {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 10px;
+        gap: 16px;
+        font-size: 0.9em;
+        color: #86868b;
+        margin-bottom: 20px;
       }
 
-      .saved-recipe-name {
+      .recipe-ingredients {
+        margin-bottom: 24px;
+      }
+
+      .recipe-ingredients h3 {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 12px;
+      }
+
+      .ingredient-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 8px;
+      }
+
+      .ingredient-item {
+        background: #f9f9f9;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        color: #1d1d1f;
+        border-left: 3px solid #007aff;
+      }
+
+      .recipe-flowchart-panel {
+        flex: 1;
+        padding: 24px;
+        background: #f9f9f9;
+        border-left: 1px solid #e5e5e7;
+        overflow-y: auto;
+      }
+
+      .recipe-flowchart-panel h3 {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 16px;
+      }
+
+      .flowchart-container {
+        background: #ffffff;
+        border: 1px solid #e5e5e7;
+        border-radius: 12px;
+        padding: 20px;
+        overflow-x: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .flowchart-container svg {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Chat Area */
+      .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        margin: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .chat-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e5e7;
+        background: #ffffff;
+      }
+
+      .chat-header h2 {
         font-size: 1.2em;
         font-weight: 600;
-        color: #333;
-        margin: 0;
+        color: #1d1d1f;
       }
 
-      .saved-recipe-date {
-        font-size: 0.9em;
-        color: #666;
-        margin: 0;
-      }
-
-      .saved-recipe-preview {
-        color: #666;
-        font-size: 0.9em;
-        margin: 10px 0;
-        line-height: 1.4;
-      }
-
-      .saved-recipe-actions {
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
         display: flex;
-        gap: 10px;
-        margin-top: 15px;
+        flex-direction: column;
+        gap: 24px;
       }
 
-      .saved-recipe-btn {
-        padding: 8px 16px;
+      .message {
+        display: flex;
+        gap: 16px;
+        max-width: 100%;
+      }
+
+      .message.user {
+        flex-direction: row-reverse;
+      }
+
+      .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9em;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .message.user .message-avatar {
+        background: #007aff;
+        color: white;
+      }
+
+      .message.assistant .message-avatar {
+        background: #34c759;
+        color: white;
+      }
+
+      .message-content {
+        flex: 1;
+        max-width: calc(100% - 48px);
+      }
+
+      .message.user .message-content {
+        text-align: right;
+      }
+
+      .message-text {
+        background: #f2f2f7;
+        padding: 16px 20px;
+        border-radius: 18px;
+        color: #1d1d1f;
+        line-height: 1.5;
+        word-wrap: break-word;
+        border: 1px solid #e5e5e7;
+      }
+
+      .message.user .message-text {
+        background: #007aff;
+        border-color: #007aff;
+        color: white;
+      }
+
+      .message-time {
+        font-size: 0.75em;
+        color: #86868b;
+        margin-top: 8px;
+        padding: 0 4px;
+      }
+
+      .message.user .message-time {
+        text-align: right;
+      }
+
+      /* Chat Input */
+      .chat-input-container {
+        padding: 24px;
+        border-top: 1px solid #e5e5e7;
+        background: #ffffff;
+      }
+
+      .chat-input-wrapper {
+        position: relative;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .chat-input {
+        width: 100%;
+        background: #f2f2f7;
+        border: 1px solid #e5e5e7;
+        border-radius: 12px;
+        padding: 16px 60px 16px 20px;
+        color: #1d1d1f;
+        font-size: 16px;
+        line-height: 1.5;
+        resize: none;
+        min-height: 24px;
+        max-height: 200px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
+
+      .chat-input:focus {
+        outline: none;
+        border-color: #007aff;
+        box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+      }
+
+      .chat-input::placeholder {
+        color: #86868b;
+      }
+
+      .chat-send-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #007aff;
         border: none;
-        border-radius: 5px;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        transition: all 0.2s ease;
+      }
+
+      .chat-send-btn:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      .chat-send-btn:disabled {
+        background: #e5e5e7;
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      /* Welcome Message */
+      .welcome-message {
+        text-align: center;
+        padding: 60px 24px;
+        color: #86868b;
+      }
+
+      .welcome-message h3 {
+        font-size: 1.5em;
+        color: #1d1d1f;
+        margin-bottom: 16px;
+        font-weight: 600;
+      }
+
+      .welcome-message p {
+        font-size: 1em;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto 32px;
+      }
+
+      .welcome-examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .example-card {
+        background: #ffffff;
+        border: 1px solid #e5e5e7;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .example-card:hover {
+        background: #f9f9f9;
+        border-color: #007aff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .example-card h4 {
+        color: #1d1d1f;
+        font-size: 0.9em;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .example-card p {
+        color: #86868b;
+        font-size: 0.85em;
+        line-height: 1.4;
+        margin: 0;
+      }
+
+      /* Flowchart Actions */
+      .flowchart-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .flowchart-btn {
+        background: #f2f2f7;
+        border: 1px solid #e5e5e7;
+        color: #1d1d1f;
+        padding: 8px 16px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 0.9em;
-        transition: all 0.3s ease;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
-      .saved-recipe-btn.load {
-        background: #667eea;
+      .flowchart-btn:hover {
+        background: #e5e5e7;
+        border-color: #007aff;
+      }
+
+      .flowchart-btn.primary {
+        background: #007aff;
+        border-color: #007aff;
         color: white;
       }
 
-      .saved-recipe-btn.load:hover {
-        background: #5a6fd8;
+      .flowchart-btn.primary:hover {
+        background: #0056b3;
+        border-color: #0056b3;
       }
 
-      .saved-recipe-btn.delete {
-        background: #dc3545;
-        color: white;
+      /* Loading States */
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #86868b;
+        font-style: italic;
+        padding: 16px 20px;
+        background: #f2f2f7;
+        border-radius: 18px;
+        border: 1px solid #e5e5e7;
       }
 
-      .saved-recipe-btn.delete:hover {
-        background: #c82333;
+      .typing-dots {
+        display: flex;
+        gap: 4px;
       }
 
-      .no-saved-recipes {
-        text-align: center;
-        padding: 40px;
-        color: #666;
+      .typing-dot {
+        width: 6px;
+        height: 6px;
+        background: #86868b;
+        border-radius: 50%;
+        animation: typing 1.4s infinite ease-in-out;
       }
 
-      .no-saved-recipes p {
-        font-size: 1.1em;
-        margin: 0;
+      .typing-dot:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: -0.16s;
       }
 
-      /* Responsive Design */
-      @media (max-width: 768px) {
-        .container {
-          margin: 10px;
-          border-radius: 16px;
+      @keyframes typing {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.8);
+          opacity: 0.5;
         }
-
-        .header {
-          padding: 40px 20px;
+        40% {
+          transform: scale(1);
+          opacity: 1;
         }
-
-        .header h1 {
-          font-size: 2.5em;
-        }
-
-        .header p {
-          font-size: 1.1em;
-        }
-
-        .content {
-          padding: 40px 20px;
-        }
-
-        .btn {
-          width: 100%;
-          margin-right: 0;
-          margin-bottom: 12px;
-        }
-
-        .file-upload {
-          width: 100%;
-          text-align: center;
-        }
-
-        textarea {
-          min-height: 200px;
-          padding: 20px;
-        }
-
-        .mermaid-container,
-        .ingredients-list,
-        .actions-list {
-          padding: 20px;
-        }
-
-        .result-section {
-          padding: 20px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .header h1 {
-          font-size: 2em;
-        }
-
-        .header p {
-          font-size: 1em;
-        }
-
-        .content {
-          padding: 20px 15px;
-        }
-
-        .btn {
-          padding: 16px 24px;
-          font-size: 14px;
-        }
-      }
-
-      /* Smooth scrolling */
-      html {
-        scroll-behavior: smooth;
-      }
-
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #5a6fd8, #6b46a3);
       }
 
       /* Toast notification */
@@ -744,6 +680,7 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         max-width: 400px;
         font-weight: 500;
+        color: #1d1d1f;
       }
 
       .toast.show {
@@ -751,21 +688,59 @@
       }
 
       .toast.success {
-        border-left: 4px solid #38a169;
-        color: #22543d;
+        border-left: 4px solid #34c759;
+        color: #1d1d1f;
       }
 
       .toast.error {
-        border-left: 4px solid #e53e3e;
-        color: #c53030;
+        border-left: 4px solid #ff3b30;
+        color: #1d1d1f;
       }
 
       .toast.info {
-        border-left: 4px solid #3182ce;
-        color: #2c5282;
+        border-left: 4px solid #007aff;
+        color: #1d1d1f;
       }
 
+      /* Mobile Responsive */
       @media (max-width: 768px) {
+        .app-container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+          height: auto;
+          max-height: 200px;
+          border-right: none;
+          border-bottom: 1px solid #4d4d4f;
+        }
+
+        .sidebar-header {
+          padding: 16px;
+        }
+
+        .recipes-section {
+          padding: 0 16px 16px;
+        }
+
+        .main-content {
+          flex: 1;
+          min-height: 0;
+        }
+
+        .chat-messages {
+          padding: 16px;
+        }
+
+        .chat-input-container {
+          padding: 16px;
+        }
+
+        .welcome-examples {
+          grid-template-columns: 1fr;
+        }
+
         .toast {
           right: 10px;
           left: 10px;
@@ -777,150 +752,181 @@
           transform: translateY(0);
         }
       }
+
+      @media (max-width: 480px) {
+        .sidebar-header h1 {
+          font-size: 1.3em;
+        }
+
+        .chat-header {
+          padding: 16px;
+        }
+
+        .chat-header h2 {
+          font-size: 1.1em;
+        }
+
+        .message-text {
+          padding: 12px 16px;
+        }
+
+        .flowchart-container {
+          padding: 16px;
+        }
+
+        .flowchart-actions {
+          flex-direction: column;
+        }
+
+        .flowchart-btn {
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <div class="header-content">
-          <h1>🍳 Recipe Flowchart Generator</h1>
-          <p>Transform your recipes into beautiful Mermaid flowcharts using AI</p>
+    <div class="mac-window">
+      <!-- Mac Title Bar -->
+      <div class="mac-titlebar">
+        <div class="mac-controls">
+          <div class="mac-control close"></div>
+          <div class="mac-control minimize"></div>
+          <div class="mac-control maximize"></div>
         </div>
       </div>
 
-      <div class="content">
-        <div class="input-section">
-          <div class="example-recipe">
-            <h4>📝 Try with the example recipe:</h4>
-            <p>
-              Load the Mapo Tofu recipe and generate a flowchart, or load the
-              pre-generated example directly.
-            </p>
-            <button onclick="loadExampleRecipe()">📝 Load Recipe Text</button>
-            <button onclick="loadExampleFlowchart()" class="green">
-              🚀 Load Example Flowchart
-            </button>
+      <div class="app-container">
+        <!-- Left Sidebar - Recipe Cards -->
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <h1>🍳 Recipe AI</h1>
+            <p>Transform recipes into beautiful flowcharts</p>
           </div>
 
-          <div class="input-group">
-            <label for="recipeInput">📋 Enter your recipe or recipe URL:</label>
-            <textarea
-              id="recipeInput"
-              placeholder="Paste your recipe text here, or enter a recipe URL (e.g., https://example.com/recipe)... Include ingredients and instructions for best results."
-            ></textarea>
-            <div style="margin-top: 8px; font-size: 0.9em; color: #666;">
-              💡 <strong>Smart Detection:</strong> We'll automatically detect if you've entered a recipe or a URL and process it accordingly. Supports most recipe websites including AllRecipes, Food Network, BBC Good Food, and more.
+          <button class="new-recipe-btn" onclick="startNewChat()">
+            <span>+</span> New Recipe
+          </button>
+
+          <div class="recipes-section">
+            <h3>Recent Recipes</h3>
+            <div id="recipeCardsList">
+              <!-- Recipe cards will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+          <!-- Expanded Recipe View -->
+          <div class="expanded-recipe-view" id="expandedRecipeView">
+            <div class="recipe-details-panel">
+              <div class="recipe-details-header">
+                <h2 class="recipe-details-title" id="expandedRecipeTitle">
+                  Select a Recipe
+                </h2>
+                <div class="recipe-details-meta" id="expandedRecipeMeta">
+                  <!-- Recipe metadata will be populated here -->
+                </div>
+              </div>
+
+              <div class="recipe-ingredients" id="expandedRecipeIngredients">
+                <h3>Ingredients</h3>
+                <div class="ingredient-list" id="ingredientList">
+                  <!-- Ingredients will be populated here -->
+                </div>
+              </div>
+            </div>
+
+            <div class="recipe-flowchart-panel">
+              <h3>Recipe Flowchart</h3>
+              <div class="flowchart-container" id="expandedFlowchartContainer">
+                <div id="expandedFlowchart">
+                  <!-- Flowchart will be rendered here -->
+                </div>
+                <div class="flowchart-actions">
+                  <button
+                    class="flowchart-btn primary"
+                    onclick="downloadExpandedFlowchart()"
+                  >
+                    💾 Download Flowchart
+                  </button>
+                  <button
+                    class="flowchart-btn"
+                    onclick="toggleExpandedRawCode()"
+                  >
+                    🔍 Show Raw Code
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="input-group">
-            <label>📁 Or upload a recipe file:</label>
-            <div class="file-upload">
-              <input
-                type="file"
-                id="recipeFile"
-                accept=".txt,.md,.doc,.docx"
-                onchange="handleFileUpload()"
-              />
-              Choose File
+          <!-- Chat Area -->
+          <div class="chat-area">
+            <div class="chat-header">
+              <h2 id="chatTitle">Recipe Chat</h2>
             </div>
-            <span id="fileName" style="margin-left: 10px; color: #666"></span>
-          </div>
 
-          <button class="btn" onclick="processRecipe()" id="processBtn">
-            🚀 Generate Flowchart
-          </button>
-          <button
-            class="btn"
-            onclick="processRecipeTable()"
-            id="processTableBtn"
-            style="background: #17a2b8"
-          >
-            📊 Generate Table
-          </button>
-          <button class="btn" onclick="saveCurrentRecipe()" id="saveBtn" style="background: #28a745">
-            💾 Save Recipe
-          </button>
-          <button class="btn" onclick="showSavedRecipes()" id="browseBtn" style="background: #6f42c1">
-            📚 Browse Saved
-          </button>
-          <button class="btn" onclick="clearAll()" style="background: #6c757d">
-            🗑️ Clear
-          </button>
-        </div>
+            <div class="chat-messages" id="chatMessages">
+              <div class="welcome-message">
+                <h3>🍳 Welcome to Recipe AI</h3>
+                <p>
+                  I'm your cooking assistant! I can help you with recipes,
+                  cooking tips, ingredient substitutions, and create beautiful
+                  flowcharts from your recipes. Feel free to ask me anything
+                  about cooking!
+                </p>
 
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          <p>Processing your recipe with AI...</p>
-        </div>
+                <div class="welcome-examples">
+                  <div
+                    class="example-card"
+                    onclick="sendExampleMessage('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/')"
+                  >
+                    <h4>🌐 Recipe URL</h4>
+                    <p>Share a recipe URL to create a flowchart</p>
+                  </div>
 
-        <div class="result-section" id="resultSection" style="display: none">
-          <h2 id="recipeTitle">📊 Recipe Flowchart</h2>
+                  <div
+                    class="example-card"
+                    onclick="sendExampleMessage('Classic Chocolate Chip Cookies\n\nIngredients:\n- 2 1/4 cups all-purpose flour\n- 1 tsp baking soda\n- 1 tsp salt\n- 1 cup butter, softened\n- 3/4 cup granulated sugar\n- 3/4 cup brown sugar\n- 2 large eggs\n- 2 tsp vanilla extract\n- 2 cups chocolate chips\n\nInstructions:\n1. Preheat oven to 375°F\n2. Mix flour, baking soda, and salt\n3. Cream butter and sugars\n4. Beat in eggs and vanilla\n5. Gradually blend in flour mixture\n6. Stir in chocolate chips\n7. Drop rounded tablespoons onto ungreased cookie sheets\n8. Bake 9-11 minutes until golden brown')"
+                  >
+                    <h4>📝 Recipe Text</h4>
+                    <p>Paste a recipe to create a flowchart</p>
+                  </div>
 
-          <div class="flowchart-controls" style="margin-bottom: 20px">
-            <button
-              class="btn"
-              onclick="downloadCurrent()"
-              id="downloadBtn"
-              style="background: #28a745"
-            >
-              💾 Download
-            </button>
-            <button
-              class="btn"
-              onclick="toggleRawCode()"
-              id="toggleCodeBtn"
-              style="background: #17a2b8"
-            >
-              🔍 Show/Hide Raw Code
-            </button>
-          </div>
+                  <div
+                    class="example-card"
+                    onclick="sendExampleMessage('What are some good substitutes for eggs in baking?')"
+                  >
+                    <h4>💡 Cooking Tips</h4>
+                    <p>Ask me about cooking techniques and substitutions</p>
+                  </div>
 
-          <div class="mermaid-container">
-            <div id="mermaid-diagram"></div>
-          </div>
+                  <div class="example-card" onclick="loadExampleRecipe()">
+                    <h4>🎯 Try Example</h4>
+                    <p>Load the Mapo Tofu example recipe</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div
-            class="mermaid-code-container"
-            id="mermaidCodeContainer"
-            style="display: none"
-          >
-            <h3>🔧 Raw Mermaid Code (for debugging)</h3>
-            <pre
-              id="mermaidCodeDisplay"
-              style="
-                background: #f8f9fa;
-                padding: 15px;
-                border-radius: 8px;
-                overflow-x: auto;
-                font-family: 'Courier New', monospace;
-                font-size: 12px;
-                border: 1px solid #dee2e6;
-              "
-            ></pre>
-          </div>
-
-          <div class="ingredients-list" id="ingredientsList"></div>
-          <div class="actions-list" id="actionsList"></div>
-        </div>
-
-        <div id="errorMessage" class="error" style="display: none"></div>
-      </div>
-    </div>
-
-    <!-- Saved Recipes Modal -->
-    <div id="savedRecipesModal" class="modal" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>📚 Your Saved Recipes</h2>
-          <span class="close" onclick="closeSavedRecipesModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div id="savedRecipesList" class="saved-recipes-list">
-            <!-- Saved recipes will be populated here -->
-          </div>
-          <div id="noSavedRecipes" class="no-saved-recipes" style="display: none;">
-            <p>No saved recipes found. Generate and save some recipes to see them here!</p>
+            <div class="chat-input-container">
+              <div class="chat-input-wrapper">
+                <textarea
+                  id="chatInput"
+                  class="chat-input"
+                  placeholder="Ask me about cooking, share a recipe, or paste a recipe URL..."
+                  rows="1"
+                ></textarea>
+                <button
+                  class="chat-send-btn"
+                  id="sendBtn"
+                  onclick="sendMessage()"
+                >
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -937,585 +943,796 @@
         },
       });
 
-      let uploadedFile = null;
-      let currentMermaidCode = null;
-      let currentHtmlTable = null;
-      let currentRecipeName = null;
-      let currentViewMode = "flowchart"; // 'flowchart' or 'table'
-      let currentRecipeData = null; // Store the complete recipe data for saving
-      let deviceId = null; // Device identifier for localStorage keys
+      // Global state
+      let currentRecipeData = null;
+      let deviceId = null;
+      let isProcessing = false;
+      let currentRecipeId = null;
+      let conversationHistory = [];
 
-      // Intelligent input detection
+      // Chat interface functions
+      function addMessage(content, type = "user", timestamp = new Date()) {
+        const messagesContainer = document.getElementById("chatMessages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        avatar.textContent = type === "user" ? "U" : "AI";
+
+        const messageContent = document.createElement("div");
+        messageContent.className = "message-content";
+
+        const messageText = document.createElement("div");
+        messageText.className = "message-text";
+        messageText.innerHTML = content;
+
+        const messageTime = document.createElement("div");
+        messageTime.className = "message-time";
+        messageTime.textContent = timestamp.toLocaleTimeString();
+
+        messageContent.appendChild(messageText);
+        messageContent.appendChild(messageTime);
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Store message in conversation history
+        conversationHistory.push({
+          role: type === "user" ? "user" : "assistant",
+          content: content,
+          timestamp: timestamp,
+        });
+
+        // Keep only the last 20 messages to prevent context from getting too long
+        if (conversationHistory.length > 20) {
+          conversationHistory = conversationHistory.slice(-20);
+        }
+
+        return messageDiv;
+      }
+
+      function addTypingIndicator() {
+        const messagesContainer = document.getElementById("chatMessages");
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "message assistant";
+        typingDiv.id = "typingIndicator";
+
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        avatar.textContent = "AI";
+
+        const messageContent = document.createElement("div");
+        messageContent.className = "message-content";
+
+        const typingIndicator = document.createElement("div");
+        typingIndicator.className = "typing-indicator";
+        typingIndicator.innerHTML = `
+          <span>AI is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+
+        messageContent.appendChild(typingIndicator);
+        typingDiv.appendChild(avatar);
+        typingDiv.appendChild(messageContent);
+
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function removeTypingIndicator() {
+        const typingIndicator = document.getElementById("typingIndicator");
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
+
+      function clearWelcomeMessage() {
+        const welcomeMessage = document.querySelector(".welcome-message");
+        if (welcomeMessage) {
+          welcomeMessage.remove();
+        }
+      }
+
+      // Input detection
       function detectInputType(input) {
         const trimmedInput = input.trim();
-        
-        // Check if it's a URL
+
         if (isValidUrl(trimmedInput)) {
-          return 'url';
+          return "url";
         }
-        
-        // Check if it looks like a recipe (has common recipe keywords)
+
+        // Check if it looks like a recipe (has ingredients and instructions)
         const recipeKeywords = [
-          'ingredients', 'instructions', 'directions', 'recipe', 'cook', 'bake', 'fry', 'boil',
-          'tablespoon', 'teaspoon', 'cup', 'pound', 'ounce', 'gram', 'kilogram', 'liter',
-          'preheat', 'mix', 'combine', 'add', 'stir', 'whisk', 'beat', 'fold', 'knead',
-          'season', 'salt', 'pepper', 'sugar', 'flour', 'butter', 'oil', 'eggs', 'milk'
+          "ingredients",
+          "instructions",
+          "directions",
+          "recipe",
+          "cook",
+          "bake",
+          "fry",
+          "boil",
+          "tablespoon",
+          "teaspoon",
+          "cup",
+          "pound",
+          "ounce",
+          "gram",
+          "kilogram",
+          "liter",
+          "preheat",
+          "mix",
+          "combine",
+          "add",
+          "stir",
+          "whisk",
+          "beat",
+          "fold",
+          "knead",
+          "season",
+          "salt",
+          "pepper",
+          "sugar",
+          "flour",
+          "butter",
+          "oil",
+          "eggs",
+          "milk",
         ];
-        
+
         const lowerInput = trimmedInput.toLowerCase();
-        const keywordCount = recipeKeywords.filter(keyword => lowerInput.includes(keyword)).length;
-        
-        // If it has multiple recipe keywords and is reasonably long, it's likely a recipe
-        if (keywordCount >= 3 && trimmedInput.length > 50) {
-          return 'recipe';
+        const keywordCount = recipeKeywords.filter((keyword) =>
+          lowerInput.includes(keyword)
+        ).length;
+
+        // Check for structured recipe format (has both ingredients and instructions)
+        const hasIngredients =
+          lowerInput.includes("ingredients") ||
+          (lowerInput.includes("ingredient") && keywordCount >= 2);
+        const hasInstructions =
+          lowerInput.includes("instructions") ||
+          lowerInput.includes("directions") ||
+          (lowerInput.includes("step") && keywordCount >= 2);
+
+        // If it has both ingredients and instructions, treat as recipe
+        if (hasIngredients && hasInstructions && trimmedInput.length > 100) {
+          return "recipe";
         }
-        
-        // If it's very short and doesn't look like a URL, it's probably invalid
-        if (trimmedInput.length < 20) {
-          return 'invalid';
+
+        // If it has many recipe keywords and is long, likely a recipe
+        if (keywordCount >= 4 && trimmedInput.length > 150) {
+          return "recipe";
         }
-        
-        // Default to recipe if we can't determine
-        return 'recipe';
+
+        // If it's a short question or general chat, treat as chat
+        if (trimmedInput.length < 100 && !hasIngredients && !hasInstructions) {
+          return "chat";
+        }
+
+        // Default to chat for general cooking questions
+        return "chat";
       }
 
       // URL validation helper
       function isValidUrl(string) {
         try {
           const url = new URL(string);
-          return ['http:', 'https:'].includes(url.protocol);
+          return ["http:", "https:"].includes(url.protocol);
         } catch (_) {
           return false;
         }
       }
 
-      // Initialize device ID and localStorage
+      // Main chat functions
+      function sendMessage() {
+        const chatInput = document.getElementById("chatInput");
+        const message = chatInput.value.trim();
+
+        if (!message || isProcessing) return;
+
+        // Clear input and add user message
+        chatInput.value = "";
+        addMessage(message, "user");
+        clearWelcomeMessage();
+
+        // Process the message
+        processUserMessage(message);
+      }
+
+      function sendExampleMessage(message) {
+        const chatInput = document.getElementById("chatInput");
+        chatInput.value = message;
+        sendMessage();
+      }
+
+      async function processUserMessage(message) {
+        isProcessing = true;
+        updateSendButton();
+
+        addTypingIndicator();
+
+        try {
+          const inputType = detectInputType(message);
+
+          let response;
+          if (inputType === "url") {
+            response = await fetch(
+              `/api/process-url/${encodeURIComponent(message)}`
+            );
+          } else if (inputType === "recipe") {
+            response = await fetch("/api/process-recipe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ recipeText: message }),
+            });
+          } else {
+            // Handle general chat
+            response = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message: message,
+                conversationHistory: conversationHistory.slice(0, -1), // Exclude the current message
+              }),
+            });
+          }
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to process message");
+          }
+
+          const result = await response.json();
+          removeTypingIndicator();
+
+          if (inputType === "recipe" || inputType === "url") {
+            // Save the recipe automatically
+            const recipeId = saveRecipeToStorage(result);
+            currentRecipeData = result;
+            currentRecipeId = recipeId;
+
+            // Display the result
+            displayRecipeResult(result);
+
+            // Update recipe cards
+            updateRecipeCards();
+          } else {
+            // Handle general chat response
+            addMessage(
+              result.response ||
+                result.message ||
+                "I'm here to help with your cooking questions!",
+              "assistant"
+            );
+          }
+        } catch (error) {
+          removeTypingIndicator();
+          addMessage(
+            `Sorry, I encountered an error: ${error.message}`,
+            "assistant"
+          );
+        } finally {
+          isProcessing = false;
+          updateSendButton();
+        }
+      }
+
+      function displayRecipeResult(result) {
+        const recipeName = result.recipeName || result.scrapedTitle || "Recipe";
+
+        // Show expanded recipe view
+        showExpandedRecipeView(result);
+
+        // Add ingredients and steps to chat
+        addRecipeToChat(result);
+
+        // Add success message
+        addMessage(
+          `<h4>🍳 ${recipeName}</h4>
+          <p>I've created a beautiful flowchart for your recipe! The recipe has been automatically saved to your collection and is now displayed in the expanded view above.</p>`,
+          "assistant"
+        );
+      }
+
+      function downloadExpandedFlowchart() {
+        if (!currentRecipeData || !currentRecipeData.mermaidDiagram) {
+          showToast("No flowchart available to download.", "error");
+          return;
+        }
+
+        const recipeName =
+          currentRecipeData.recipeName ||
+          currentRecipeData.scrapedTitle ||
+          "recipe";
+        downloadMermaidCode(currentRecipeData.mermaidDiagram, recipeName);
+      }
+
+      function toggleExpandedRawCode() {
+        if (!currentRecipeData || !currentRecipeData.mermaidDiagram) {
+          showToast("No flowchart code available.", "error");
+          return;
+        }
+
+        const codeHtml = `
+          <div style="background: #f2f2f7; color: #1d1d1f; padding: 16px; border-radius: 8px; margin-top: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; border: 1px solid #e5e5e7;">
+            <pre>${escapeHtml(currentRecipeData.mermaidDiagram)}</pre>
+          </div>
+        `;
+
+        addMessage(`<h4>🔧 Raw Mermaid Code</h4>${codeHtml}`, "assistant");
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function updateSendButton() {
+        const sendBtn = document.getElementById("sendBtn");
+
+        if (isProcessing) {
+          sendBtn.disabled = true;
+          sendBtn.innerHTML = "<span>⏳</span>";
+        } else {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = "<span>→</span>";
+        }
+      }
+
+      function startNewChat() {
+        const chatMessages = document.getElementById("chatMessages");
+        chatMessages.innerHTML = `
+          <div class="welcome-message">
+            <h3>🍳 Welcome to Recipe AI</h3>
+            <p>I'm your cooking assistant! I can help you with recipes, cooking tips, 
+            ingredient substitutions, and create beautiful flowcharts from your recipes. 
+            Feel free to ask me anything about cooking!</p>
+            
+            <div class="welcome-examples">
+              <div class="example-card" onclick="sendExampleMessage('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/')">
+                <h4>🌐 Recipe URL</h4>
+                <p>Share a recipe URL to create a flowchart</p>
+              </div>
+              
+              <div class="example-card" onclick="sendExampleMessage('Classic Chocolate Chip Cookies\\n\\nIngredients:\\n- 2 1/4 cups all-purpose flour\\n- 1 tsp baking soda\\n- 1 tsp salt\\n- 1 cup butter, softened\\n- 3/4 cup granulated sugar\\n- 3/4 cup brown sugar\\n- 2 large eggs\\n- 2 tsp vanilla extract\\n- 2 cups chocolate chips\\n\\nInstructions:\\n1. Preheat oven to 375°F\\n2. Mix flour, baking soda, and salt\\n3. Cream butter and sugars\\n4. Beat in eggs and vanilla\\n5. Gradually blend in flour mixture\\n6. Stir in chocolate chips\\n7. Drop rounded tablespoons onto ungreased cookie sheets\\n8. Bake 9-11 minutes until golden brown')">
+                <h4>📝 Recipe Text</h4>
+                <p>Paste a recipe to create a flowchart</p>
+              </div>
+              
+              <div class="example-card" onclick="sendExampleMessage('What are some good substitutes for eggs in baking?')">
+                <h4>💡 Cooking Tips</h4>
+                <p>Ask me about cooking techniques and substitutions</p>
+              </div>
+              
+              <div class="example-card" onclick="loadExampleRecipe()">
+                <h4>🎯 Try Example</h4>
+                <p>Load the Mapo Tofu example recipe</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Hide expanded recipe view
+        const expandedView = document.getElementById("expandedRecipeView");
+        expandedView.classList.remove("active");
+
+        currentRecipeData = null;
+        currentRecipeId = null;
+        conversationHistory = []; // Clear conversation history
+
+        // Update recipe cards to remove active state
+        updateRecipeCards();
+      }
+
+      // Storage and recipe management
       function initializeStorage() {
-        // Get device ID from cookie or generate one
-        const cookies = document.cookie.split(';');
+        const cookies = document.cookie.split(";");
         let foundDeviceId = null;
-        
+
         for (let cookie of cookies) {
-          const [name, value] = cookie.trim().split('=');
-          if (name === 'deviceId') {
+          const [name, value] = cookie.trim().split("=");
+          if (name === "deviceId") {
             foundDeviceId = value;
             break;
           }
         }
-        
-        if (!foundDeviceId) {
-          // Generate a device ID if not found
-          foundDeviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-          document.cookie = `deviceId=${foundDeviceId}; max-age=${365 * 24 * 60 * 60}; path=/`;
-        }
-        
-        deviceId = foundDeviceId;
-        console.log('🆔 Device ID initialized:', deviceId);
-      }
 
-      // localStorage management functions
-      function getStorageKey(key) {
-        return `recipe_${deviceId}_${key}`;
+        if (!foundDeviceId) {
+          foundDeviceId =
+            "device_" +
+            Date.now() +
+            "_" +
+            Math.random().toString(36).substr(2, 9);
+          document.cookie = `deviceId=${foundDeviceId}; max-age=${
+            365 * 24 * 60 * 60
+          }; path=/`;
+        }
+
+        deviceId = foundDeviceId;
+        console.log("🆔 Device ID initialized:", deviceId);
+
+        // Load recipe cards on initialization
+        updateRecipeCards();
       }
 
       function saveRecipeToStorage(recipeData) {
-        try {
-          const storageKey = getStorageKey('recipes');
-          const existingRecipes = JSON.parse(localStorage.getItem(storageKey) || '[]');
-          
-          const recipeToSave = {
-            id: Date.now().toString(),
-            name: recipeData.recipeName || recipeData.scrapedTitle || 'Untitled Recipe',
-            data: recipeData,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          
-          existingRecipes.unshift(recipeToSave); // Add to beginning
-          
-          // Limit to 50 saved recipes
-          if (existingRecipes.length > 50) {
-            existingRecipes.splice(50);
-          }
-          
-          localStorage.setItem(storageKey, JSON.stringify(existingRecipes));
-          console.log('💾 Recipe saved to localStorage:', recipeToSave.name);
-          return recipeToSave.id;
-        } catch (error) {
-          console.error('❌ Error saving recipe to localStorage:', error);
-          return null;
+        if (!deviceId) return null;
+
+        const recipeId =
+          "recipe_" +
+          Date.now() +
+          "_" +
+          Math.random().toString(36).substr(2, 9);
+        const recipeName =
+          recipeData.recipeName || recipeData.scrapedTitle || "Untitled Recipe";
+
+        const recipeToSave = {
+          id: recipeId,
+          name: recipeName,
+          data: recipeData,
+          timestamp: new Date().toISOString(),
+          deviceId: deviceId,
+        };
+
+        const savedRecipes = getSavedRecipes();
+        savedRecipes.unshift(recipeToSave); // Add to beginning
+
+        // Keep only the last 50 recipes
+        if (savedRecipes.length > 50) {
+          savedRecipes.splice(50);
         }
+
+        localStorage.setItem(
+          `savedRecipes_${deviceId}`,
+          JSON.stringify(savedRecipes)
+        );
+
+        showToast(`Recipe "${recipeName}" saved successfully!`, "success");
+
+        return recipeId;
       }
 
       function getSavedRecipes() {
-        try {
-          const storageKey = getStorageKey('recipes');
-          return JSON.parse(localStorage.getItem(storageKey) || '[]');
-        } catch (error) {
-          console.error('❌ Error loading recipes from localStorage:', error);
-          return [];
-        }
+        if (!deviceId) return [];
+
+        const saved = localStorage.getItem(`savedRecipes_${deviceId}`);
+        return saved ? JSON.parse(saved) : [];
       }
 
-      function deleteRecipeFromStorage(recipeId) {
-        try {
-          const storageKey = getStorageKey('recipes');
-          const existingRecipes = JSON.parse(localStorage.getItem(storageKey) || '[]');
-          const filteredRecipes = existingRecipes.filter(recipe => recipe.id !== recipeId);
-          localStorage.setItem(storageKey, JSON.stringify(filteredRecipes));
-          console.log('🗑️ Recipe deleted from localStorage:', recipeId);
-          return true;
-        } catch (error) {
-          console.error('❌ Error deleting recipe from localStorage:', error);
-          return false;
-        }
-      }
+      function updateRecipeCards() {
+        const recipeCardsList = document.getElementById("recipeCardsList");
+        const savedRecipes = getSavedRecipes();
 
-      function loadExampleRecipe() {
-        const exampleRecipe = `MAPO TOFU
-
-INGREDIENTS
-▢ 1/2 cup oil (divided)
-▢ 1-2 fresh Thai bird chili peppers (thinly sliced)
-▢ 6-8 dried red chilies (roughly chopped)
-▢ 1/2- 1 1/2 tablespoons Sichuan peppercorns (powdered or finely ground, reserving 1/4 teaspoon for garnish at the end; if you want a milder flavor use 1/2 or 1 teaspoon ground Sichuan peppercorn)
-▢ 3 tablespoons ginger (finely minced)
-▢ 3 tablespoons garlic (finely minced)
-▢ 8 ounces ground pork
-▢ 1-2 tablespoons spicy bean sauce (depending on your desired salt/spice levels)
-▢ 2/3 cup low sodium chicken broth (or water)
-▢ 1 pound silken tofu (cut into 1 inch/2.5cm cubes)
-▢ 1/4 cup water
-▢ 1 1/2 teaspoons cornstarch
-▢ 1/4 teaspoon sesame oil (optional)
-▢ 1/4 teaspoon sugar (optional)
-▢ 1 scallion (finely chopped)
-
-INSTRUCTIONS
-
-First, we toast the chilies. If you have homemade toasted chili oil, you can skip this step. Heat your wok or a small saucepan over low heat. Add half of the oil and throw in the fresh and dried peppers. Stir occasionally and heat until fragrant, about 5 minutes, ensuring that the peppers don't burn. Remove from heat and set aside.
-Heat the remaining half of the oil in your wok over medium heat. Add the ginger. After 1 minute, add the garlic. Fry for another minute, and then turn up the heat to high and add the ground pork. Break up the meat and fry it until it's cooked through. Add your ground Sichuan peppercorns and stir for about 15-30 seconds, taking care to not let it burn, as it will turn bitter if it does.
-Add the spicy bean sauce to the mixture and stir it in well. Add the chicken broth to the wok and stir. Let this simmer for a minute or so. While that's happening, ready your tofu and combine the water and cornstarch in a small bowl.
-Add the cornstarch mixture to your sauce and stir. Let it bubble away until the sauce starts to thicken. (If it gets too thick, splash in a little more water or chicken stock.)
-Then add your chili oil from before—peppers and all! If you are using homemade chili oil, ONLY use the standing oil, as it's likely that you have salted it and you only want the oil, not additional salt. Stir the oil into the sauce, and add the tofu. Use your spatula to gently toss the tofu in the sauce. Let everything cook for 3-5 minutes. Add the sesame oil and sugar (if using) along with the scallions and stir until the scallions are just wilted.
-Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.`;
-
-        document.getElementById("recipeInput").value = exampleRecipe;
-      }
-
-      async function loadExampleFlowchart() {
-        const processBtn = document.getElementById("processBtn");
-        const loading = document.getElementById("loading");
-        const resultSection = document.getElementById("resultSection");
-        const errorMessage = document.getElementById("errorMessage");
-
-        // Show loading state
-        processBtn.disabled = true;
-        loading.style.display = "block";
-        resultSection.style.display = "none";
-        errorMessage.style.display = "none";
-
-        try {
-          const response = await fetch("/api/example-flowchart");
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-              errorData.error || "Failed to load example flowchart"
-            );
-          }
-
-          const result = await response.json();
-          displayResult(result);
-        } catch (error) {
-          showError(`Error: ${error.message}`);
-        } finally {
-          processBtn.disabled = false;
-          loading.style.display = "none";
-        }
-      }
-
-      function handleFileUpload() {
-        const fileInput = document.getElementById("recipeFile");
-        const fileName = document.getElementById("fileName");
-
-        if (fileInput.files.length > 0) {
-          uploadedFile = fileInput.files[0];
-          fileName.textContent = `Selected: ${uploadedFile.name}`;
-        } else {
-          uploadedFile = null;
-          fileName.textContent = "";
-        }
-      }
-
-      async function processRecipe() {
-        const recipeInput = document.getElementById("recipeInput").value.trim();
-        const processBtn = document.getElementById("processBtn");
-        const processTableBtn = document.getElementById("processTableBtn");
-        const loading = document.getElementById("loading");
-        const resultSection = document.getElementById("resultSection");
-        const errorMessage = document.getElementById("errorMessage");
-
-        if (!recipeInput && !uploadedFile) {
-          showError("Please enter a recipe, upload a file, or provide a recipe URL.");
+        if (savedRecipes.length === 0) {
+          recipeCardsList.innerHTML =
+            '<p style="color: #86868b; font-size: 0.9em; text-align: center; padding: 20px;">No recipes yet. Start by sharing a recipe!</p>';
           return;
         }
 
-        // If we have text input, validate it
-        if (recipeInput) {
-          const inputType = detectInputType(recipeInput);
-          console.log(`🔍 Detected input type: ${inputType}`);
-          
-          if (inputType === 'invalid') {
-            showError("The input appears to be too short or doesn't look like a recipe or URL. Please provide a complete recipe or a valid recipe URL.");
-            return;
-          }
-          // Continue with processing (server will handle URL vs recipe detection)
-        }
-
-        // Show loading state
-        processBtn.disabled = true;
-        processTableBtn.disabled = true;
-        loading.style.display = "block";
-        resultSection.style.display = "none";
-        errorMessage.style.display = "none";
-
-        try {
-          let response;
-
-          if (uploadedFile) {
-            // Upload file
-            const formData = new FormData();
-            formData.append("recipeFile", uploadedFile);
-
-            response = await fetch("/api/upload-recipe", {
-              method: "POST",
-              body: formData,
-            });
-          } else {
-            // Process text (recipe input)
-            response = await fetch("/api/process-recipe", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ recipeText: recipeInput }),
-            });
-          }
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to process recipe");
-          }
-
-          const result = await response.json();
-          currentViewMode = "flowchart";
-          displayResult(result);
-        } catch (error) {
-          showError(`Error: ${error.message}`);
-        } finally {
-          processBtn.disabled = false;
-          processTableBtn.disabled = false;
-          loading.style.display = "none";
-        }
-      }
-
-
-      async function processRecipeTable() {
-        const recipeInput = document.getElementById("recipeInput").value.trim();
-        const processBtn = document.getElementById("processBtn");
-        const processTableBtn = document.getElementById("processTableBtn");
-        const loading = document.getElementById("loading");
-        const resultSection = document.getElementById("resultSection");
-        const errorMessage = document.getElementById("errorMessage");
-
-        if (!recipeInput && !uploadedFile) {
-          showError("Please enter a recipe, upload a file, or provide a recipe URL.");
-          return;
-        }
-
-        // If we have text input, validate it
-        if (recipeInput) {
-          const inputType = detectInputType(recipeInput);
-          
-          if (inputType === 'url') {
-            // For now, show error for URL + table combination
-            showError("Table view is not yet supported for recipe URLs. Please use the flowchart view.");
-            return;
-          } else if (inputType === 'invalid') {
-            showError("The input appears to be too short or doesn't look like a recipe or URL. Please provide a complete recipe or a valid recipe URL.");
-            return;
-          }
-          // Continue with processing (server will handle URL vs recipe detection)
-        }
-
-        // Show loading state
-        processBtn.disabled = true;
-        processTableBtn.disabled = true;
-        loading.style.display = "block";
-        resultSection.style.display = "none";
-        errorMessage.style.display = "none";
-
-        try {
-          let response;
-
-          if (uploadedFile) {
-            // For file uploads, we'll need to read the file content
-            const fileContent = await readFileContent(uploadedFile);
-            response = await fetch("/api/process-recipe-table", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ recipeText: fileContent }),
-            });
-          } else {
-            // Process text (recipe input)
-            response = await fetch("/api/process-recipe-table", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ recipeText: recipeInput }),
-            });
-          }
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-              errorData.error || "Failed to process recipe to table"
-            );
-          }
-
-          const result = await response.json();
-          currentViewMode = "table";
-          displayTableResult(result);
-        } catch (error) {
-          showError(`Error: ${error.message}`);
-        } finally {
-          processBtn.disabled = false;
-          processTableBtn.disabled = false;
-          loading.style.display = "none";
-        }
-      }
-
-      function readFileContent(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.onerror = (e) => reject(e);
-          reader.readAsText(file);
-        });
-      }
-
-      function displayResult(result) {
-        const resultSection = document.getElementById("resultSection");
-        const mermaidContainer = document.getElementById("mermaid-diagram");
-        const ingredientsList = document.getElementById("ingredientsList");
-        const actionsList = document.getElementById("actionsList");
-        const recipeTitle = document.getElementById("recipeTitle");
-
-        // Store the Mermaid code and recipe name for download
-        currentMermaidCode = result.mermaidDiagram;
-        currentRecipeName = result.recipeName || result.scrapedTitle || "recipe";
-        currentRecipeData = result; // Store complete recipe data for saving
-
-        // Update the recipe title to show the human-readable name
-        const displayName = result.recipeName || result.scrapedTitle || "Recipe";
-        recipeTitle.textContent = `🍳 ${displayName}`;
-
-        // Clear the container and render new Mermaid diagram
-        mermaidContainer.innerHTML = "";
-
-        // Create a unique ID for this diagram
-        const diagramId = "mermaid-diagram-" + Date.now();
-        mermaidContainer.innerHTML = `<div id="${diagramId}">${result.mermaidDiagram}</div>`;
-
-        // Initialize Mermaid with the new content
-        mermaid.init(undefined, document.getElementById(diagramId));
-
-        // Display ingredients if available
-        if (result.ingredients && result.ingredients.length > 0) {
-          ingredientsList.innerHTML = `
-            <h3>🥘 Ingredients (${result.ingredients.length})</h3>
-            ${result.ingredients
-              .map(
-                (ingredient) => `
-              <div class="ingredient-item">
-                <strong>${ingredient.name}</strong> <span style="color: #667eea; font-weight: 600;">${ingredient.quantity || 'No quantity specified'}</span>
-                <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${ingredient.description}</div>
-              </div>
-            `
-              )
-              .join("")}
-          `;
-        } else {
-          ingredientsList.innerHTML = "";
-        }
-
-        // Display actions if available
-        if (result.actions && result.actions.length > 0) {
-          actionsList.innerHTML = `
-            <h3>👨‍🍳 Cooking Actions (${result.actions.length})</h3>
-            ${result.actions
-              .map(
-                (action) => `
-              <div class="action-item">
-                <strong>${
-                  action.name
-                }</strong> <span style="color: #ff6b6b; font-size: 0.9em;">(${
-                  action.duration
-                } min)</span>
-                <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${
-                  action.description
-                }</div>
-                <div style="color: #888; font-size: 0.8em; margin-top: 4px;">
-                  Inputs: ${action.inputIngredients.join(
-                    ", "
-                  )} → Outputs: ${action.outputIngredients.join(", ")}
+        recipeCardsList.innerHTML = savedRecipes
+          .map(
+            (recipe) => `
+          <div class="recipe-card ${
+            recipe.id === currentRecipeId ? "active" : ""
+          }" onclick="loadRecipe('${recipe.id}')">
+            <div class="recipe-card-image">
+              ${
+                recipe.data.imageUrl
+                  ? `<img src="${recipe.data.imageUrl}" alt="${recipe.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`
+                  : "🍳"
+              }
+            </div>
+            <div class="recipe-card-title">${recipe.name}</div>
+            <div class="recipe-card-meta">
+              <span class="recipe-card-date">${new Date(
+                recipe.timestamp
+              ).toLocaleDateString()}</span>
+              <div class="recipe-card-actions">
+                <button class="recipe-card-btn" onclick="event.stopPropagation(); downloadRecipe('${
+                  recipe.id
+                }')" title="Download">
+                  💾
+                </button>
+                <button class="recipe-card-btn delete" onclick="event.stopPropagation(); deleteRecipe('${
+                  recipe.id
+                }')" title="Delete">
+                  🗑️
+                </button>
                 </div>
               </div>
-            `
-              )
-              .join("")}
-          `;
-        } else {
-          actionsList.innerHTML = "";
-        }
-
-        // Show source information if available
-        if (result.originalUrl) {
-          const sourceInfo = document.createElement("div");
-          sourceInfo.style.cssText = `
-            background: #e8f4f8;
-            border: 1px solid #bee5eb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-          `;
-          sourceInfo.innerHTML = `
-            <strong>📄 Source:</strong> <a href="${result.originalUrl}" target="_blank" style="color: #17a2b8;">${result.originalUrl}</a>
-            ${result.scrapedTitle ? `<br><strong>📝 Title:</strong> ${result.scrapedTitle}` : ''}
-          `;
-          resultSection.insertBefore(sourceInfo, resultSection.firstChild);
-        }
-
-        resultSection.style.display = "block";
+          </div>
+        `
+          )
+          .join("");
       }
 
-      function displayTableResult(result) {
-        const resultSection = document.getElementById("resultSection");
-        const mermaidContainer = document.getElementById("mermaid-diagram");
-        const ingredientsList = document.getElementById("ingredientsList");
-        const actionsList = document.getElementById("actionsList");
-        const recipeTitle = document.getElementById("recipeTitle");
+      function loadRecipe(recipeId) {
+        const savedRecipes = getSavedRecipes();
+        const recipe = savedRecipes.find((r) => r.id === recipeId);
 
-        // Store the HTML table and recipe name for download
-        currentHtmlTable = result.htmlTable;
-        currentRecipeName = result.recipeName || "recipe";
+        if (!recipe) {
+          showToast("Recipe not found", "error");
+          return;
+        }
 
-        // Update the recipe title to show the human-readable name
-        const displayName = result.recipeName || "Recipe";
-        recipeTitle.textContent = `🍳 ${displayName}`;
+        // Set current recipe
+        currentRecipeData = recipe.data;
+        currentRecipeId = recipeId;
 
-        // Hide Mermaid container and show HTML table
-        mermaidContainer.style.display = "none";
+        // Show expanded recipe view
+        showExpandedRecipeView(recipe.data);
 
-        // Create or update table container
-        let tableContainer = document.getElementById("table-container");
-        if (!tableContainer) {
-          tableContainer = document.createElement("div");
-          tableContainer.id = "table-container";
-          tableContainer.style.cssText = `
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-          `;
-          mermaidContainer.parentNode.insertBefore(
-            tableContainer,
-            mermaidContainer
+        // Add ingredients and steps to chat
+        addRecipeToChat(recipe.data);
+
+        // Update active card
+        updateRecipeCards();
+      }
+
+      function showExpandedRecipeView(recipeData) {
+        const expandedView = document.getElementById("expandedRecipeView");
+        const titleElement = document.getElementById("expandedRecipeTitle");
+        const metaElement = document.getElementById("expandedRecipeMeta");
+        const ingredientsElement = document.getElementById("ingredientList");
+        const flowchartElement = document.getElementById("expandedFlowchart");
+
+        // Show the expanded view
+        expandedView.classList.add("active");
+
+        // Update title
+        const recipeName =
+          recipeData.recipeName || recipeData.scrapedTitle || "Recipe";
+        titleElement.textContent = recipeName;
+
+        // Update metadata
+        const ingredientCount = recipeData.ingredients?.length || 0;
+        const actionCount = recipeData.actions?.length || 0;
+        metaElement.innerHTML = `
+          <span>${ingredientCount} ingredients</span>
+          <span>•</span>
+          <span>${actionCount} steps</span>
+          <span>•</span>
+          <span>${new Date().toLocaleDateString()}</span>
+        `;
+
+        // Update ingredients
+        if (recipeData.ingredients && recipeData.ingredients.length > 0) {
+          ingredientsElement.innerHTML = recipeData.ingredients
+            .map(
+              (ingredient) => `
+              <div class="ingredient-item">
+                <strong>${ingredient.quantity}</strong> ${ingredient.name}
+              </div>
+            `
+            )
+            .join("");
+        } else {
+          ingredientsElement.innerHTML =
+            '<p style="color: #86868b;">No ingredients available</p>';
+        }
+
+        // Render flowchart
+        if (recipeData.mermaidDiagram) {
+          renderExpandedFlowchart(recipeData.mermaidDiagram);
+        } else {
+          flowchartElement.innerHTML =
+            '<p style="color: #86868b;">No flowchart available</p>';
+        }
+      }
+
+      function renderExpandedFlowchart(mermaidCode) {
+        const flowchartElement = document.getElementById("expandedFlowchart");
+        const diagramId = "expanded-mermaid-diagram-" + Date.now();
+
+        // Clear existing content
+        flowchartElement.innerHTML = "";
+
+        // Create container for the diagram
+        const diagramContainer = document.createElement("div");
+        diagramContainer.id = diagramId;
+        flowchartElement.appendChild(diagramContainer);
+
+        // Render the Mermaid diagram
+        setTimeout(async () => {
+          try {
+            const { svg } = await mermaid.render(
+              diagramId + "-svg",
+              mermaidCode
+            );
+            diagramContainer.innerHTML = svg;
+          } catch (error) {
+            console.error("Mermaid rendering error:", error);
+            diagramContainer.innerHTML = `<div style="color: #ff3b30; padding: 16px; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;">
+              <strong>Error rendering diagram:</strong><br>
+              ${error.message}
+            </div>`;
+          }
+        }, 200);
+      }
+
+      function addRecipeToChat(recipeData) {
+        const chatMessages = document.getElementById("chatMessages");
+
+        // Clear welcome message
+        const welcomeMessage = document.querySelector(".welcome-message");
+        if (welcomeMessage) {
+          welcomeMessage.remove();
+        }
+
+        // Add ingredients message
+        if (recipeData.ingredients && recipeData.ingredients.length > 0) {
+          const ingredientsText = recipeData.ingredients
+            .map((ingredient) => `• ${ingredient.quantity} ${ingredient.name}`)
+            .join("\n");
+
+          addMessage(
+            `<h4>🥘 Ingredients</h4><pre style="white-space: pre-wrap; font-family: inherit;">${ingredientsText}</pre>`,
+            "assistant"
           );
         }
 
-        tableContainer.innerHTML = result.htmlTable;
-        tableContainer.style.display = "block";
+        // Add steps message
+        if (recipeData.actions && recipeData.actions.length > 0) {
+          const stepsText = recipeData.actions
+            .map(
+              (action, index) =>
+                `${index + 1}. ${action.name} (${action.duration} min)\n   ${
+                  action.description
+                }`
+            )
+            .join("\n\n");
 
-        // Display ingredients if available
-        if (result.ingredients && result.ingredients.length > 0) {
-          ingredientsList.innerHTML = `
-            <h3>🥘 Ingredients (${result.ingredients.length})</h3>
-            ${result.ingredients
-              .map(
-                (ingredient) => `
-              <div class="ingredient-item">
-                <strong>${ingredient.name}</strong> <span style="color: #667eea; font-weight: 600;">${ingredient.quantity || 'No quantity specified'}</span>
-                <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${ingredient.description}</div>
-              </div>
-            `
-              )
-              .join("")}
-          `;
-        } else {
-          ingredientsList.innerHTML = "";
+          addMessage(
+            `<h4>👨‍🍳 Cooking Steps</h4><pre style="white-space: pre-wrap; font-family: inherit;">${stepsText}</pre>`,
+            "assistant"
+          );
+        }
+      }
+
+      function deleteRecipe(recipeId) {
+        if (!confirm("Are you sure you want to delete this recipe?")) return;
+
+        const savedRecipes = getSavedRecipes();
+        const updatedRecipes = savedRecipes.filter((r) => r.id !== recipeId);
+
+        localStorage.setItem(
+          `savedRecipes_${deviceId}`,
+          JSON.stringify(updatedRecipes)
+        );
+
+        if (currentRecipeId === recipeId) {
+          currentRecipeData = null;
+          currentRecipeId = null;
         }
 
-        // Display steps if available
-        if (result.steps && result.steps.length > 0) {
-          actionsList.innerHTML = `
-            <h3>👨‍🍳 Cooking Steps (${result.steps.length})</h3>
-            ${result.steps
-              .map(
-                (step) => `
-              <div class="action-item">
-                <strong>${
-                  step.name
-                }</strong> <span style="color: #ff6b6b; font-size: 0.9em;">(${
-                  step.duration
-                } min)</span>
-                <div style="color: #666; font-size: 0.9em; margin-top: 4px;">${
-                  step.description
-                }</div>
-                <div style="color: #888; font-size: 0.8em; margin-top: 4px;">
-                  Involves: ${step.involvedIngredients.join(", ")}
-                </div>
-              </div>
-            `
-              )
-              .join("")}
-          `;
-        } else {
-          actionsList.innerHTML = "";
+        updateRecipeCards();
+        showToast("Recipe deleted successfully", "success");
+      }
+
+      function downloadRecipe(recipeId) {
+        const savedRecipes = getSavedRecipes();
+        const recipe = savedRecipes.find((r) => r.id === recipeId);
+
+        if (!recipe) {
+          showToast("Recipe not found", "error");
+          return;
         }
 
-        resultSection.style.display = "block";
+        downloadMermaidCode(recipe.data.mermaidDiagram, recipe.name);
+      }
+
+      // Utility functions
+      function downloadMermaidCode(mermaidCode, filename = "recipe-flowchart") {
+        if (!mermaidCode) {
+          showToast("No Mermaid code available to download.", "error");
+          return;
+        }
+
+        const blob = new Blob([mermaidCode], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename
+          .replace(/[^a-z0-9]/gi, "_")
+          .toLowerCase()}.mmd`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast("Flowchart code downloaded successfully!", "success");
+      }
+
+      function toggleRawCode(mermaidCode) {
+        const codeHtml = `
+          <div style="background: #1a1a1a; color: #f0f0f0; padding: 16px; border-radius: 8px; margin-top: 12px; font-family: monospace; font-size: 12px; overflow-x: auto;">
+            <pre>${escapeHtml(mermaidCode)}</pre>
+          </div>
+        `;
+
+        addMessage(`<h4>🔧 Raw Mermaid Code</h4>${codeHtml}`, "assistant");
+      }
+
+      function loadExampleRecipe() {
+        const exampleRecipe = `Mapo Tofu
+
+Ingredients:
+- 1 block (14 oz) soft tofu, cut into 1-inch cubes
+- 1/2 lb ground pork
+- 2 tbsp Sichuan peppercorns
+- 3 tbsp doubanjiang (fermented bean paste)
+- 2 tbsp soy sauce
+- 1 tbsp Shaoxing wine
+- 1 tsp sugar
+- 2 cloves garlic, minced
+- 1 inch ginger, minced
+- 2 green onions, chopped
+- 1/4 cup chicken stock
+- 2 tbsp cornstarch mixed with 2 tbsp water
+- 2 tbsp vegetable oil
+
+Instructions:
+1. Heat oil in a wok over medium-high heat
+2. Add ground pork and cook until browned
+3. Add garlic, ginger, and Sichuan peppercorns, stir-fry for 30 seconds
+4. Add doubanjiang and stir-fry for 1 minute
+5. Add chicken stock, soy sauce, Shaoxing wine, and sugar
+6. Bring to a boil and add tofu cubes
+7. Simmer for 5 minutes, gently stirring occasionally
+8. Add cornstarch slurry and stir until sauce thickens
+9. Garnish with green onions and serve over rice`;
+
+        sendExampleMessage(exampleRecipe);
+      }
+
+      // Chat input handling
+      function setupChatInput() {
+        const chatInput = document.getElementById("chatInput");
+
+        chatInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+
+        // Auto-resize textarea
+        chatInput.addEventListener("input", function () {
+          this.style.height = "auto";
+          this.style.height = Math.min(this.scrollHeight, 200) + "px";
+        });
       }
 
       // Toast notification functions
-      function showToast(message, type = 'info', duration = 4000) {
+      function showToast(message, type = "info", duration = 4000) {
         // Remove any existing toast
-        const existingToast = document.querySelector('.toast');
+        const existingToast = document.querySelector(".toast");
         if (existingToast) {
           existingToast.remove();
         }
 
         // Create new toast
-        const toast = document.createElement('div');
+        const toast = document.createElement("div");
         toast.className = `toast ${type}`;
         toast.textContent = message;
-        
+
         document.body.appendChild(toast);
-        
+
         // Trigger animation
         setTimeout(() => {
-          toast.classList.add('show');
+          toast.classList.add("show");
         }, 100);
-        
+
         // Auto remove
         setTimeout(() => {
-          toast.classList.remove('show');
+          toast.classList.remove("show");
           setTimeout(() => {
             if (toast.parentNode) {
               toast.remove();
@@ -1524,357 +1741,59 @@ Serve with a last sprinkle of Sichuan peppercorn powder as a garnish if desired.
         }, duration);
       }
 
-      function showError(message) {
-        // Show both inline error and toast
-        const errorMessage = document.getElementById("errorMessage");
-        errorMessage.textContent = message;
-        errorMessage.style.display = "block";
-        errorMessage.className = "error";
-        
-        // Also show toast notification
-        showToast(message, 'error', 5000);
-      }
+      // Test function for Mermaid rendering
+      window.testMermaid = async function () {
+        const testDiagram = `graph TD;
+          A[Start] --> B[Process];
+          B --> C[End];`;
 
-      function downloadMermaidCode() {
-        if (!currentMermaidCode) {
-          showError("No Mermaid code available to download.");
-          return;
-        }
-
+        console.log("Testing Mermaid rendering...");
         try {
-          const response = fetch("/api/download-mermaid", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              mermaidCode: currentMermaidCode,
-              recipeName: currentRecipeName,
-            }),
-          });
-
-          response
-            .then((res) => {
-              if (res.ok) {
-                return res.blob();
-              } else {
-                throw new Error("Failed to download Mermaid code");
-              }
-            })
-            .then((blob) => {
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = `${currentRecipeName}_flowchart.mmd`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((error) => {
-              showError(`Error downloading file: ${error.message}`);
-            });
+          const { svg } = await mermaid.render("test-diagram", testDiagram);
+          console.log("Test successful!", svg);
+          return svg;
         } catch (error) {
-          showError(`Error downloading file: ${error.message}`);
+          console.error("Test failed:", error);
+          return null;
         }
-      }
+      };
 
-      function downloadHtmlTable() {
-        if (!currentHtmlTable) {
-          showError("No HTML table available to download.");
-          return;
-        }
-
-        try {
-          const response = fetch("/api/download-table", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              htmlTable: currentHtmlTable,
-              recipeName: currentRecipeName,
-            }),
-          });
-
-          response
-            .then((res) => {
-              if (res.ok) {
-                return res.blob();
-              } else {
-                throw new Error("Failed to download HTML table");
-              }
-            })
-            .then((blob) => {
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = `${currentRecipeName}_table.html`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((error) => {
-              showError(`Error downloading file: ${error.message}`);
-            });
-        } catch (error) {
-          showError(`Error downloading file: ${error.message}`);
-        }
-      }
-
-      function downloadCurrent() {
-        if (currentViewMode === "flowchart") {
-          downloadMermaidCode();
-        } else if (currentViewMode === "table") {
-          downloadHtmlTable();
-        } else {
-          showError("No content available to download.");
-        }
-      }
-
-      function toggleRawCode() {
-        const codeContainer = document.getElementById("mermaidCodeContainer");
-        const codeDisplay = document.getElementById("mermaidCodeDisplay");
-        const toggleBtn = document.getElementById("toggleCodeBtn");
-
-        if (codeContainer.style.display === "none") {
-          if (currentViewMode === "flowchart" && currentMermaidCode) {
-            codeDisplay.textContent = currentMermaidCode;
-            codeContainer.style.display = "block";
-            toggleBtn.textContent = "🔍 Hide Raw Code";
-          } else if (currentViewMode === "table" && currentHtmlTable) {
-            codeDisplay.innerHTML = currentHtmlTable;
-            codeContainer.style.display = "block";
-            toggleBtn.textContent = "🔍 Hide Raw Code";
-          } else {
-            showError("No raw code available to display.");
-          }
-        } else {
-          codeContainer.style.display = "none";
-          toggleBtn.textContent = "🔍 Show Raw Code";
-        }
-      }
-
-      function clearAll() {
-        document.getElementById("recipeInput").value = "";
-        document.getElementById("recipeFile").value = "";
-        document.getElementById("fileName").textContent = "";
-        document.getElementById("resultSection").style.display = "none";
-        document.getElementById("errorMessage").style.display = "none";
-        document.getElementById("mermaidCodeContainer").style.display = "none";
-        document.getElementById("toggleCodeBtn").textContent =
-          "🔍 Show Raw Code";
-        document.getElementById("recipeTitle").textContent = "📊 Recipe Flowchart";
-
-        // Hide table container if it exists
-        const tableContainer = document.getElementById("table-container");
-        if (tableContainer) {
-          tableContainer.style.display = "none";
-        }
-
-        // Show Mermaid container
-        document.getElementById("mermaid-diagram").style.display = "block";
-
-        uploadedFile = null;
-        currentMermaidCode = null;
-        currentHtmlTable = null;
-        currentRecipeName = null;
-        currentRecipeData = null;
-        currentViewMode = "flowchart";
-      }
-
-      // Save current recipe to localStorage
-      function saveCurrentRecipe() {
-        if (!currentRecipeData) {
-          showError("No recipe to save. Please generate a recipe first.");
-          return;
-        }
-
-        const recipeId = saveRecipeToStorage(currentRecipeData);
-        if (recipeId) {
-          const displayName = currentRecipeData.recipeName || currentRecipeData.scrapedTitle || "Recipe";
-          showSuccess(`Recipe "${displayName}" saved successfully!`);
-        } else {
-          showError("Failed to save recipe. Please try again.");
-        }
-      }
-
-      // Show saved recipes modal
-      function showSavedRecipes() {
-        const modal = document.getElementById("savedRecipesModal");
-        const recipesList = document.getElementById("savedRecipesList");
-        const noRecipes = document.getElementById("noSavedRecipes");
-        
-        const savedRecipes = getSavedRecipes();
-        
-        if (savedRecipes.length === 0) {
-          recipesList.style.display = "none";
-          noRecipes.style.display = "block";
-        } else {
-          noRecipes.style.display = "none";
-          recipesList.style.display = "block";
-          
-          recipesList.innerHTML = savedRecipes.map(recipe => {
-            const createdDate = new Date(recipe.createdAt).toLocaleDateString();
-            const preview = recipe.data.ingredients ? 
-              `${recipe.data.ingredients.length} ingredients, ${recipe.data.actions?.length || 0} actions` :
-              'Recipe data available';
-            
-            return `
-              <div class="saved-recipe-item">
-                <div class="saved-recipe-header">
-                  <h3 class="saved-recipe-name">${recipe.name}</h3>
-                  <p class="saved-recipe-date">${createdDate}</p>
-                </div>
-                <div class="saved-recipe-preview">${preview}</div>
-                <div class="saved-recipe-actions">
-                  <button class="saved-recipe-btn load" onclick="loadSavedRecipe('${recipe.id}')">
-                    📖 Load Recipe
-                  </button>
-                  <button class="saved-recipe-btn delete" onclick="deleteSavedRecipe('${recipe.id}')">
-                    🗑️ Delete
-                  </button>
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-        
-        modal.style.display = "block";
-      }
-
-      // Close saved recipes modal
-      function closeSavedRecipesModal() {
-        document.getElementById("savedRecipesModal").style.display = "none";
-      }
-
-      // Load a saved recipe
-      function loadSavedRecipe(recipeId) {
-        const savedRecipes = getSavedRecipes();
-        const recipe = savedRecipes.find(r => r.id === recipeId);
-        
-        if (recipe) {
-          currentRecipeData = recipe.data;
-          displayResult(recipe.data);
-          closeSavedRecipesModal();
-          const displayName = recipe.data.recipeName || recipe.data.scrapedTitle || recipe.name;
-          showSuccess(`Recipe "${displayName}" loaded successfully!`);
-        } else {
-          showError("Recipe not found. It may have been deleted.");
-        }
-      }
-
-      // Delete a saved recipe
-      function deleteSavedRecipe(recipeId) {
-        if (confirm("Are you sure you want to delete this recipe? This action cannot be undone.")) {
-          if (deleteRecipeFromStorage(recipeId)) {
-            showSavedRecipes(); // Refresh the list
-            showSuccess("Recipe deleted successfully!");
-          } else {
-            showError("Failed to delete recipe. Please try again.");
-          }
-        }
-      }
-
-      // Show success message
-      function showSuccess(message) {
-        // Show toast notification (primary method)
-        showToast(message, 'success', 4000);
-        
-        // Also show inline message for consistency
-        const errorMessage = document.getElementById("errorMessage");
-        errorMessage.textContent = message;
-        errorMessage.style.display = "block";
-        errorMessage.className = "success";
-        
-        setTimeout(() => {
-          errorMessage.style.display = "none";
-          errorMessage.className = "error"; // Reset to error class
-        }, 4000);
-      }
-
-      // Close modal when clicking outside
-      window.onclick = function(event) {
-        const modal = document.getElementById("savedRecipesModal");
-        if (event.target === modal) {
-          closeSavedRecipesModal();
-        }
-      }
-
-      // Process URL path on page load
-      async function processUrlPath() {
-        const currentPath = window.location.pathname;
-        
-        // Check if the path looks like a recipe URL (starts with http:// or https://)
-        if (currentPath && currentPath.length > 1 && 
-            (currentPath.startsWith('/http://') || currentPath.startsWith('/https://'))) {
-          
-          // Extract the URL from the path (remove the leading slash)
-          const recipeUrl = currentPath.substring(1);
-          console.log('🔗 Recipe URL detected in path:', recipeUrl);
-          
-          // Prefill the text box with the URL
-          const recipeInput = document.getElementById("recipeInput");
-          if (recipeInput) {
-            recipeInput.value = recipeUrl;
-          }
-          
-          // Validate URL format
-          if (!isValidUrl(recipeUrl)) {
-            showError('Invalid URL format in path. Please provide a valid HTTP or HTTPS URL.');
-            return;
-          }
-          
-          // Show loading state
-          const processBtn = document.getElementById("processBtn");
-          const processTableBtn = document.getElementById("processTableBtn");
-          const loading = document.getElementById("loading");
-          const resultSection = document.getElementById("resultSection");
-          const errorMessage = document.getElementById("errorMessage");
-          
-          processBtn.disabled = true;
-          processTableBtn.disabled = true;
-          loading.style.display = "block";
-          resultSection.style.display = "none";
-          errorMessage.style.display = "none";
-          
-          try {
-            console.log('🌐 Processing recipe URL from path...');
-            const response = await fetch(`/api/process-url/${encodeURIComponent(recipeUrl)}`);
-            
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.error || "Failed to process recipe URL");
-            }
-            
-            const result = await response.json();
-            currentViewMode = "flowchart";
-            displayResult(result);
-            
-            // Clear the URL path from the address bar for a cleaner experience
-            const newUrl = window.location.protocol + "//" + window.location.host + "/";
-            window.history.replaceState({}, document.title, newUrl);
-            
-            console.log('✅ Recipe URL processed successfully from path');
-          } catch (error) {
-            showError(`Error processing recipe URL: ${error.message}`);
-          } finally {
-            processBtn.disabled = false;
-            processTableBtn.disabled = false;
-            loading.style.display = "none";
-          }
-        }
-      }
-
-      // Initialize storage when page loads
-      document.addEventListener('DOMContentLoaded', function() {
+      // Initialize the application
+      document.addEventListener("DOMContentLoaded", function () {
         initializeStorage();
+        setupChatInput();
         processUrlPath();
       });
+
+      // URL path processing (for direct recipe URLs)
+      async function processUrlPath() {
+        const currentPath = window.location.pathname;
+
+        if (
+          currentPath &&
+          currentPath.length > 1 &&
+          (currentPath.startsWith("/http://") ||
+            currentPath.startsWith("/https://"))
+        ) {
+          const recipeUrl = currentPath.substring(1); // Remove leading slash
+          console.log("🔗 Recipe URL detected in path:", recipeUrl);
+
+          // Prefill the chat input with the URL
+          const chatInput = document.getElementById("chatInput");
+          if (chatInput) {
+            chatInput.value = recipeUrl;
+          }
+
+          // Clear welcome message and process
+          clearWelcomeMessage();
+          await processUserMessage(recipeUrl);
+
+          // Clean up the URL
+          const newUrl =
+            window.location.protocol + "//" + window.location.host + "/";
+          window.history.replaceState({}, document.title, newUrl);
+        }
+      }
     </script>
   </body>
 </html>
-

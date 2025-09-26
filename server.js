@@ -8,6 +8,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const cookieParser = require("cookie-parser");
 const { v4: uuidv4 } = require("uuid");
+const { GoogleGenAI } = require("@google/genai");
 require("dotenv").config();
 
 const { recipeFlowchartSchema } = require("./schemas");
@@ -30,11 +31,11 @@ app.use(express.static("public"));
 app.use((req, res, next) => {
   if (!req.cookies.deviceId) {
     const deviceId = uuidv4();
-    res.cookie('deviceId', deviceId, { 
+    res.cookie("deviceId", deviceId, {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       httpOnly: false, // Allow client-side access for localStorage
       secure: false, // Set to true in production with HTTPS
-      sameSite: 'lax'
+      sameSite: "lax",
     });
     req.deviceId = deviceId;
     console.log(`🆔 New device ID assigned: ${deviceId}`);
@@ -47,7 +48,11 @@ app.use((req, res, next) => {
 // Request logging middleware
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
-  console.log(`📡 ${timestamp} - ${req.method} ${req.path} - ${req.ip} - Device: ${req.deviceId?.substring(0, 8)}...`);
+  console.log(
+    `📡 ${timestamp} - ${req.method} ${req.path} - ${
+      req.ip
+    } - Device: ${req.deviceId?.substring(0, 8)}...`
+  );
   next();
 });
 
@@ -59,12 +64,174 @@ if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
+// General chat function for cooking questions
+async function processCookingChat(message, conversationHistory = []) {
+  console.log("💬 Processing cooking chat...");
+  console.log(`📝 Message: ${message}`);
+  console.log(
+    `📚 Conversation history: ${conversationHistory.length} messages`
+  );
+
+  const systemPrompt = `You are a helpful cooking assistant and culinary expert. You can help with:
+- Cooking techniques and tips
+- Ingredient substitutions
+- Recipe modifications
+- Food safety questions
+- Kitchen equipment advice
+- Meal planning suggestions
+- Nutritional information
+- Cooking troubleshooting
+
+Provide helpful, accurate, and practical advice. Be conversational and friendly. If someone asks about creating a recipe flowchart, suggest they share a recipe URL or paste recipe text.
+
+IMPORTANT: You have access to the conversation history. Use this context to provide more relevant and personalized responses. If the user is asking about a specific recipe that was mentioned earlier, refer to that recipe and provide specific advice based on the ingredients and steps that were discussed.`;
+
+  try {
+    console.log("🤖 Sending chat request to OpenAI API...");
+    const startTime = Date.now();
+
+    // Build messages array with system prompt, conversation history, and current message
+    const messages = [{ role: "system", content: systemPrompt }];
+
+    // Add conversation history (limit to last 10 messages to stay within token limits)
+    const recentHistory = conversationHistory.slice(-10);
+    for (const msg of recentHistory) {
+      // Clean HTML tags from content for better context
+      const cleanContent = msg.content.replace(/<[^>]*>/g, "").trim();
+      if (cleanContent) {
+        messages.push({
+          role: msg.role,
+          content: cleanContent,
+        });
+      }
+    }
+
+    // Add current message
+    messages.push({ role: "user", content: message });
+
+    console.log(`📤 Sending ${messages.length} messages to OpenAI`);
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+      temperature: 0.7,
+    });
+
+    const apiResponseTime = Date.now() - startTime;
+    console.log(`✅ OpenAI API response received in ${apiResponseTime}ms`);
+    console.log(
+      `📊 Token usage: ${completion.usage?.total_tokens || "unknown"} tokens`
+    );
+
+    const response = completion.choices[0].message.content;
+    console.log("🎉 Chat processing completed successfully!");
+
+    return {
+      response: response,
+      type: "chat",
+    };
+  } catch (error) {
+    console.error("❌ OpenAI API Error:", error);
+    throw new Error("Failed to process chat message with OpenAI");
+  }
+}
+
+// Image generation function using Nano Banana (Google GenAI)
+async function generateRecipeImage(recipeData) {
+  console.log("🎨 Starting recipe image generation with Nano Banana...");
+
+  try {
+    // Check if API key is available
+    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.log("⚠️ No Google AI API key found, skipping image generation");
+      return null;
+    }
+
+    // Create a descriptive prompt based on the recipe
+    const recipeName =
+      recipeData.recipeName || recipeData.scrapedTitle || "delicious dish";
+    const ingredients = recipeData.ingredients || [];
+
+    // Build a descriptive prompt for Nano Banana
+    let prompt = `Create a cute, animated illustration of ${recipeName}`;
+
+    if (ingredients.length > 0) {
+      const mainIngredients = ingredients
+        .slice(0, 5)
+        .map((ing) => ing.name)
+        .join(", ");
+      prompt += ` featuring ${mainIngredients}`;
+    }
+
+    prompt += `. The dish should be drawn in a kawaii, chibi, soft colors. Think Studio Ghibli meets food illustration - whimsical, charming, and endearing. Bright, cheerful colors, rounded shapes, and a playful, animated aesthetic. Do not anthropomorphize the food. The food should look like food.`;
+
+    console.log(`🎨 Generated prompt: ${prompt}`);
+
+    // Initialize Google GenAI
+    const ai = new GoogleGenAI({ apiKey });
+
+    console.log("🤖 Calling Nano Banana API...");
+    const startTime = Date.now();
+
+    // Generate image using Nano Banana
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-image-preview",
+      contents: prompt,
+    });
+
+    const apiResponseTime = Date.now() - startTime;
+    console.log(`✅ Nano Banana response received in ${apiResponseTime}ms`);
+
+    // Extract image data from response
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const imageData = part.inlineData.data;
+        const buffer = Buffer.from(imageData, "base64");
+
+        // Create images directory if it doesn't exist
+        const imagesDir = path.join(__dirname, "public", "images");
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+        }
+
+        // Generate unique filename
+        const filename = `recipe_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}.png`;
+        const filepath = path.join(imagesDir, filename);
+
+        // Save image to file
+        fs.writeFileSync(filepath, buffer);
+
+        // Return the public URL for the image
+        const imageUrl = `/images/${filename}`;
+        console.log(`🎉 Image generated successfully: ${imageUrl}`);
+        return imageUrl;
+      }
+    }
+
+    throw new Error("No image data received from Nano Banana");
+  } catch (error) {
+    console.error("❌ Nano Banana Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+    });
+
+    // Return null if image generation fails - we'll handle this gracefully
+    console.log("⚠️ Image generation failed, continuing without image");
+    return null;
+  }
+}
+
 // Recipe processing function
 async function processRecipeToFlowchart(recipeText) {
   console.log("🍳 Starting recipe processing...");
   console.log(`📝 Recipe text length: ${recipeText.length} characters`);
   console.log(`📝 Recipe preview: ${recipeText.substring(0, 200)}...`);
-  
+
   const systemPrompt = `You are a culinary expert who transforms recipes into structured flowcharts. 
 
 Your task is to analyze a recipe and create a Mermaid flowchart that shows:
@@ -114,7 +281,7 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
   try {
     console.log("🤖 Sending request to OpenAI API...");
     const startTime = Date.now();
-    
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -134,14 +301,20 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
 
     const apiResponseTime = Date.now() - startTime;
     console.log(`✅ OpenAI API response received in ${apiResponseTime}ms`);
-    console.log(`📊 Token usage: ${completion.usage?.total_tokens || 'unknown'} tokens`);
-    
+    console.log(
+      `📊 Token usage: ${completion.usage?.total_tokens || "unknown"} tokens`
+    );
+
     const result = JSON.parse(completion.choices[0].message.content);
     console.log("📋 Parsed result structure:");
-    console.log(`  - Recipe name: "${result.recipeName || 'Not provided'}"`);
+    console.log(`  - Recipe name: "${result.recipeName || "Not provided"}"`);
     console.log(`  - Ingredients: ${result.ingredients?.length || 0} items`);
     console.log(`  - Actions: ${result.actions?.length || 0} items`);
-    console.log(`  - Mermaid diagram length: ${result.mermaidDiagram?.length || 0} characters`);
+    console.log(
+      `  - Mermaid diagram length: ${
+        result.mermaidDiagram?.length || 0
+      } characters`
+    );
 
     // Ensure we have a recipe name (fallback to extracted name if AI didn't provide one)
     if (!result.recipeName) {
@@ -155,15 +328,19 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
     } else {
       console.log(`📝 AI-generated recipe name: "${result.recipeName}"`);
     }
-    
+
     // Log ingredient details
     if (result.ingredients && result.ingredients.length > 0) {
       console.log("🥘 Ingredients extracted:");
       result.ingredients.forEach((ingredient, index) => {
-        console.log(`  ${index + 1}. ${ingredient.name} - ${ingredient.quantity || 'No quantity'}`);
+        console.log(
+          `  ${index + 1}. ${ingredient.name} - ${
+            ingredient.quantity || "No quantity"
+          }`
+        );
       });
     }
-    
+
     // Log action details
     if (result.actions && result.actions.length > 0) {
       console.log("👨‍🍳 Actions extracted:");
@@ -171,15 +348,29 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
         console.log(`  ${index + 1}. ${action.name} (${action.duration} min)`);
       });
     }
-    
+
     console.log("🎉 Recipe processing completed successfully!");
+
+    // Generate image for the recipe
+    try {
+      console.log("🎨 Starting image generation...");
+      const imageUrl = await generateRecipeImage(result);
+      if (imageUrl) {
+        result.imageUrl = imageUrl;
+        console.log("✅ Image generated and added to recipe data");
+      }
+    } catch (imageError) {
+      console.error("⚠️ Image generation failed:", imageError.message);
+      // Continue without image - don't fail the entire recipe processing
+    }
+
     return result;
   } catch (error) {
     console.error("❌ OpenAI API Error:", error);
     console.error("Error details:", {
       message: error.message,
       status: error.status,
-      code: error.code
+      code: error.code,
     });
     throw new Error("Failed to process recipe with OpenAI");
   }
@@ -189,49 +380,58 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
 async function scrapeRecipeFromURL(url) {
   console.log("🌐 Starting URL scraping...");
   console.log(`🔗 Target URL: ${url}`);
-  
+
   try {
     // Validate URL
     const urlObj = new URL(url);
-    if (!['http:', 'https:'].includes(urlObj.protocol)) {
-      throw new Error('Invalid URL protocol. Only HTTP and HTTPS are supported.');
+    if (!["http:", "https:"].includes(urlObj.protocol)) {
+      throw new Error(
+        "Invalid URL protocol. Only HTTP and HTTPS are supported."
+      );
     }
-    console.log(`✅ URL validation passed: ${urlObj.protocol}//${urlObj.hostname}`);
+    console.log(
+      `✅ URL validation passed: ${urlObj.protocol}//${urlObj.hostname}`
+    );
 
     // Fetch the webpage
     console.log("📡 Fetching webpage...");
     const fetchStartTime = Date.now();
-    
+
     const response = await axios.get(url, {
       timeout: 10000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     const fetchTime = Date.now() - fetchStartTime;
-    console.log(`✅ Webpage fetched in ${fetchTime}ms (${response.data.length} characters)`);
-    console.log(`📊 Response status: ${response.status} ${response.statusText}`);
+    console.log(
+      `✅ Webpage fetched in ${fetchTime}ms (${response.data.length} characters)`
+    );
+    console.log(
+      `📊 Response status: ${response.status} ${response.statusText}`
+    );
 
     const $ = cheerio.load(response.data);
 
     // Try to find recipe content using common selectors
-    let recipeText = '';
+    let recipeText = "";
 
     // Common recipe selectors for popular sites
     const recipeSelectors = [
       '[itemtype*="Recipe"]',
       '[itemtype*="recipe"]',
-      '.recipe',
-      '.recipe-content',
-      '.recipe-instructions',
-      '.recipe-ingredients',
-      '.entry-content',
-      '.post-content',
-      '.content',
-      'article',
-      '.recipe-card',
-      '.recipe-details'
+      ".recipe",
+      ".recipe-content",
+      ".recipe-instructions",
+      ".recipe-ingredients",
+      ".entry-content",
+      ".post-content",
+      ".content",
+      "article",
+      ".recipe-card",
+      ".recipe-details",
     ];
 
     let recipeElement = null;
@@ -244,36 +444,43 @@ async function scrapeRecipeFromURL(url) {
 
     if (recipeElement.length === 0) {
       // Fallback: try to get the main content area
-      recipeElement = $('main, .main, #main, .content, #content').first();
+      recipeElement = $("main, .main, #main, .content, #content").first();
       if (recipeElement.length === 0) {
-        recipeElement = $('body');
+        recipeElement = $("body");
       }
     }
 
     // Extract text content, preserving structure
-    recipeElement.find('script, style, nav, header, footer, .ad, .advertisement, .ads').remove();
-    
+    recipeElement
+      .find("script, style, nav, header, footer, .ad, .advertisement, .ads")
+      .remove();
+
     // Get the title
-    const title = $('h1').first().text().trim() || 
-                  $('title').text().trim() || 
-                  'Recipe from URL';
+    const title =
+      $("h1").first().text().trim() ||
+      $("title").text().trim() ||
+      "Recipe from URL";
     console.log(`📝 Extracted title: "${title}"`);
 
     // Extract ingredients
     console.log("🥘 Extracting ingredients...");
     const ingredients = [];
-    $('[itemprop="ingredients"], .ingredient, .recipe-ingredient, li').each((i, el) => {
-      const text = $(el).text().trim();
-      if (text && text.length > 0 && text.length < 200) {
-        ingredients.push(text);
+    $('[itemprop="ingredients"], .ingredient, .recipe-ingredient, li').each(
+      (i, el) => {
+        const text = $(el).text().trim();
+        if (text && text.length > 0 && text.length < 200) {
+          ingredients.push(text);
+        }
       }
-    });
+    );
     console.log(`✅ Found ${ingredients.length} potential ingredients`);
 
     // Extract instructions
     console.log("👨‍🍳 Extracting instructions...");
     const instructions = [];
-    $('[itemprop="recipeInstructions"], .instruction, .recipe-instruction, .step, ol li').each((i, el) => {
+    $(
+      '[itemprop="recipeInstructions"], .instruction, .recipe-instruction, .step, ol li'
+    ).each((i, el) => {
       const text = $(el).text().trim();
       if (text && text.length > 0 && text.length < 500) {
         instructions.push(text);
@@ -282,18 +489,18 @@ async function scrapeRecipeFromURL(url) {
     console.log(`✅ Found ${instructions.length} potential instructions`);
 
     // Build recipe text
-    recipeText = title + '\n\n';
-    
+    recipeText = title + "\n\n";
+
     if (ingredients.length > 0) {
-      recipeText += 'INGREDIENTS\n';
-      ingredients.forEach(ingredient => {
+      recipeText += "INGREDIENTS\n";
+      ingredients.forEach((ingredient) => {
         recipeText += `▢ ${ingredient}\n`;
       });
-      recipeText += '\n';
+      recipeText += "\n";
     }
 
     if (instructions.length > 0) {
-      recipeText += 'INSTRUCTIONS\n\n';
+      recipeText += "INSTRUCTIONS\n\n";
       instructions.forEach((instruction, index) => {
         recipeText += `${index + 1}. ${instruction}\n\n`;
       });
@@ -306,12 +513,14 @@ async function scrapeRecipeFromURL(url) {
 
     // Clean up the text
     recipeText = recipeText
-      .replace(/\s+/g, ' ')
-      .replace(/\n\s*\n/g, '\n\n')
+      .replace(/\s+/g, " ")
+      .replace(/\n\s*\n/g, "\n\n")
       .trim();
 
     if (recipeText.length < 50) {
-      throw new Error('Could not extract sufficient recipe content from the URL. The page may not contain a recipe or may be protected.');
+      throw new Error(
+        "Could not extract sufficient recipe content from the URL. The page may not contain a recipe or may be protected."
+      );
     }
 
     console.log(`📄 Final recipe text length: ${recipeText.length} characters`);
@@ -321,15 +530,16 @@ async function scrapeRecipeFromURL(url) {
     return {
       title: title,
       content: recipeText,
-      url: url
+      url: url,
     };
-
   } catch (error) {
-    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-      throw new Error('Could not connect to the URL. Please check if the URL is correct and accessible.');
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request timeout. The website took too long to respond.');
-    } else if (error.message.includes('Invalid URL')) {
+    if (error.code === "ENOTFOUND" || error.code === "ECONNREFUSED") {
+      throw new Error(
+        "Could not connect to the URL. Please check if the URL is correct and accessible."
+      );
+    } else if (error.code === "ECONNABORTED") {
+      throw new Error("Request timeout. The website took too long to respond.");
+    } else if (error.message.includes("Invalid URL")) {
       throw new Error(error.message);
     } else {
       throw new Error(`Failed to scrape recipe from URL: ${error.message}`);
@@ -346,15 +556,17 @@ app.get("/", (req, res) => {
 app.get("/api/process-url/*", async (req, res) => {
   const requestId = Date.now().toString(36);
   console.log(`\n🌐 [${requestId}] Direct URL processing request`);
-  
+
   try {
     // Extract the URL from the path (everything after /api/process-url/)
     const urlPath = req.params[0]; // This captures everything after the route
     const recipeUrl = decodeURIComponent(urlPath);
-    
+
     if (!recipeUrl) {
       console.log(`❌ [${requestId}] Missing URL in path`);
-      return res.status(400).json({ error: "Recipe URL is required in the path" });
+      return res
+        .status(400)
+        .json({ error: "Recipe URL is required in the path" });
     }
 
     console.log(`🔗 [${requestId}] Processing URL: ${recipeUrl}`);
@@ -362,32 +574,76 @@ app.get("/api/process-url/*", async (req, res) => {
     // Validate URL format
     try {
       const urlObj = new URL(recipeUrl);
-      if (!['http:', 'https:'].includes(urlObj.protocol)) {
-        throw new Error('Invalid URL protocol');
+      if (!["http:", "https:"].includes(urlObj.protocol)) {
+        throw new Error("Invalid URL protocol");
       }
     } catch (urlError) {
       console.log(`❌ [${requestId}] Invalid URL format: ${recipeUrl}`);
-      return res.status(400).json({ error: "Invalid URL format. Please provide a valid HTTP or HTTPS URL." });
+      return res.status(400).json({
+        error: "Invalid URL format. Please provide a valid HTTP or HTTPS URL.",
+      });
     }
 
     // Scrape the recipe from the URL
     const scrapedRecipe = await scrapeRecipeFromURL(recipeUrl);
     console.log(`✅ [${requestId}] URL scraping completed`);
-    
+
     // Process the scraped recipe
-    console.log(`🤖 [${requestId}] Starting AI processing of scraped content...`);
+    console.log(
+      `🤖 [${requestId}] Starting AI processing of scraped content...`
+    );
     const result = await processRecipeToFlowchart(scrapedRecipe.content);
-    
+
     // Add the original URL and scraped title to the result
     result.originalUrl = scrapedRecipe.url;
     result.scrapedTitle = scrapedRecipe.title;
-    
-    console.log(`🎉 [${requestId}] Direct URL processing completed successfully`);
-    console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
-    
+
+    console.log(
+      `🎉 [${requestId}] Direct URL processing completed successfully`
+    );
+    console.log(
+      `📤 [${requestId}] Sending response with ${
+        result.ingredients?.length || 0
+      } ingredients and ${result.actions?.length || 0} actions`
+    );
+
     res.json(result);
   } catch (error) {
-    console.error(`❌ [${requestId}] Error processing recipe URL:`, error.message);
+    console.error(
+      `❌ [${requestId}] Error processing recipe URL:`,
+      error.message
+    );
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// General chat endpoint for cooking questions
+app.post("/api/chat", async (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n💬 [${requestId}] New chat request`);
+  console.log(
+    `💬 [${requestId}] Request body size: ${
+      JSON.stringify(req.body).length
+    } characters`
+  );
+
+  try {
+    const { message, conversationHistory } = req.body;
+
+    if (!message) {
+      console.log(`❌ [${requestId}] Missing message`);
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    console.log(`✅ [${requestId}] Starting chat processing...`);
+    const result = await processCookingChat(message, conversationHistory || []);
+
+    console.log(`🎉 [${requestId}] Chat processing completed successfully`);
+    console.log(`📤 [${requestId}] Sending response`);
+
+    res.json(result);
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error processing chat:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -395,8 +651,12 @@ app.get("/api/process-url/*", async (req, res) => {
 app.post("/api/process-recipe", async (req, res) => {
   const requestId = Date.now().toString(36);
   console.log(`\n📥 [${requestId}] New recipe processing request`);
-  console.log(`📥 [${requestId}] Request body size: ${JSON.stringify(req.body).length} characters`);
-  
+  console.log(
+    `📥 [${requestId}] Request body size: ${
+      JSON.stringify(req.body).length
+    } characters`
+  );
+
   try {
     const { recipeText } = req.body;
 
@@ -412,15 +672,15 @@ app.post("/api/process-recipe", async (req, res) => {
 
     try {
       const url = new URL(recipeText.trim());
-      if (['http:', 'https:'].includes(url.protocol)) {
+      if (["http:", "https:"].includes(url.protocol)) {
         console.log(`🔗 [${requestId}] Detected URL input: ${recipeText}`);
-        
+
         // Scrape the recipe from the URL
         const scrapedRecipe = await scrapeRecipeFromURL(recipeText);
         processedRecipeText = scrapedRecipe.content;
         originalUrl = scrapedRecipe.url;
         scrapedTitle = scrapedRecipe.title;
-        
+
         console.log(`✅ [${requestId}] URL scraping completed`);
       }
     } catch (urlError) {
@@ -430,16 +690,20 @@ app.post("/api/process-recipe", async (req, res) => {
 
     console.log(`✅ [${requestId}] Starting recipe processing...`);
     const result = await processRecipeToFlowchart(processedRecipeText);
-    
+
     // Add URL metadata if this was scraped from a URL
     if (originalUrl) {
       result.originalUrl = originalUrl;
       result.scrapedTitle = scrapedTitle;
     }
-    
+
     console.log(`🎉 [${requestId}] Recipe processing completed successfully`);
-    console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
-    
+    console.log(
+      `📤 [${requestId}] Sending response with ${
+        result.ingredients?.length || 0
+      } ingredients and ${result.actions?.length || 0} actions`
+    );
+
     res.json(result);
   } catch (error) {
     console.error(`❌ [${requestId}] Error processing recipe:`, error.message);
@@ -450,7 +714,7 @@ app.post("/api/process-recipe", async (req, res) => {
 app.post("/api/process-recipe-url", async (req, res) => {
   const requestId = Date.now().toString(36);
   console.log(`\n🌐 [${requestId}] New recipe URL processing request`);
-  
+
   try {
     const { recipeUrl } = req.body;
 
@@ -464,21 +728,32 @@ app.post("/api/process-recipe-url", async (req, res) => {
     // Scrape the recipe from the URL
     const scrapedRecipe = await scrapeRecipeFromURL(recipeUrl);
     console.log(`✅ [${requestId}] URL scraping completed`);
-    
+
     // Process the scraped recipe
-    console.log(`🤖 [${requestId}] Starting AI processing of scraped content...`);
+    console.log(
+      `🤖 [${requestId}] Starting AI processing of scraped content...`
+    );
     const result = await processRecipeToFlowchart(scrapedRecipe.content);
-    
+
     // Add the original URL and scraped title to the result
     result.originalUrl = scrapedRecipe.url;
     result.scrapedTitle = scrapedRecipe.title;
-    
-    console.log(`🎉 [${requestId}] Recipe URL processing completed successfully`);
-    console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
-    
+
+    console.log(
+      `🎉 [${requestId}] Recipe URL processing completed successfully`
+    );
+    console.log(
+      `📤 [${requestId}] Sending response with ${
+        result.ingredients?.length || 0
+      } ingredients and ${result.actions?.length || 0} actions`
+    );
+
     res.json(result);
   } catch (error) {
-    console.error(`❌ [${requestId}] Error processing recipe URL:`, error.message);
+    console.error(
+      `❌ [${requestId}] Error processing recipe URL:`,
+      error.message
+    );
     res.status(500).json({ error: error.message });
   }
 });
@@ -489,14 +764,16 @@ app.post(
   async (req, res) => {
     const requestId = Date.now().toString(36);
     console.log(`\n📁 [${requestId}] New file upload request`);
-    
+
     try {
       if (!req.file) {
         console.log(`❌ [${requestId}] No file uploaded`);
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      console.log(`📁 [${requestId}] File uploaded: ${req.file.originalname} (${req.file.size} bytes)`);
+      console.log(
+        `📁 [${requestId}] File uploaded: ${req.file.originalname} (${req.file.size} bytes)`
+      );
       const filePath = req.file.path;
       const recipeText = fs.readFileSync(filePath, "utf8");
 
@@ -506,13 +783,22 @@ app.post(
 
       console.log(`✅ [${requestId}] Starting recipe processing...`);
       const result = await processRecipeToFlowchart(recipeText);
-      
-      console.log(`🎉 [${requestId}] File upload processing completed successfully`);
-      console.log(`📤 [${requestId}] Sending response with ${result.ingredients?.length || 0} ingredients and ${result.actions?.length || 0} actions`);
-      
+
+      console.log(
+        `🎉 [${requestId}] File upload processing completed successfully`
+      );
+      console.log(
+        `📤 [${requestId}] Sending response with ${
+          result.ingredients?.length || 0
+        } ingredients and ${result.actions?.length || 0} actions`
+      );
+
       res.json(result);
     } catch (error) {
-      console.error(`❌ [${requestId}] Error processing uploaded recipe:`, error.message);
+      console.error(
+        `❌ [${requestId}] Error processing uploaded recipe:`,
+        error.message
+      );
       res.status(500).json({ error: error.message });
     }
   }
@@ -569,18 +855,24 @@ app.get("/api/example-flowchart", (req, res) => {
 // Recipe storage endpoints
 app.post("/api/save-recipe", (req, res) => {
   const requestId = Date.now().toString(36);
-  console.log(`\n💾 [${requestId}] Save recipe request from device: ${req.deviceId?.substring(0, 8)}...`);
-  
+  console.log(
+    `\n💾 [${requestId}] Save recipe request from device: ${req.deviceId?.substring(
+      0,
+      8
+    )}...`
+  );
+
   try {
     const { recipeData } = req.body;
-    
+
     if (!recipeData) {
       console.log(`❌ [${requestId}] Missing recipe data`);
       return res.status(400).json({ error: "Recipe data is required" });
     }
 
     // Use the AI-generated recipe name from the data, or fallback to a default
-    const recipeName = recipeData.recipeName || recipeData.scrapedTitle || "Untitled Recipe";
+    const recipeName =
+      recipeData.recipeName || recipeData.scrapedTitle || "Untitled Recipe";
 
     // Add metadata to the recipe
     const savedRecipe = {
@@ -589,14 +881,16 @@ app.post("/api/save-recipe", (req, res) => {
       data: recipeData,
       deviceId: req.deviceId,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
-    console.log(`✅ [${requestId}] Recipe saved: "${recipeName}" (ID: ${savedRecipe.id})`);
-    res.json({ 
-      success: true, 
+    console.log(
+      `✅ [${requestId}] Recipe saved: "${recipeName}" (ID: ${savedRecipe.id})`
+    );
+    res.json({
+      success: true,
       recipeId: savedRecipe.id,
-      message: "Recipe saved successfully" 
+      message: "Recipe saved successfully",
     });
   } catch (error) {
     console.error(`❌ [${requestId}] Error saving recipe:`, error.message);
@@ -606,19 +900,28 @@ app.post("/api/save-recipe", (req, res) => {
 
 app.get("/api/saved-recipes", (req, res) => {
   const requestId = Date.now().toString(36);
-  console.log(`\n📚 [${requestId}] Get saved recipes request from device: ${req.deviceId?.substring(0, 8)}...`);
-  
+  console.log(
+    `\n📚 [${requestId}] Get saved recipes request from device: ${req.deviceId?.substring(
+      0,
+      8
+    )}...`
+  );
+
   try {
     // In a real implementation, you'd query a database
     // For now, we'll return a message indicating the client should use localStorage
     console.log(`✅ [${requestId}] Returning localStorage instructions`);
-    res.json({ 
+    res.json({
       message: "Use localStorage to manage saved recipes",
       deviceId: req.deviceId,
-      instructions: "Recipes are stored in browser localStorage with device-specific keys"
+      instructions:
+        "Recipes are stored in browser localStorage with device-specific keys",
     });
   } catch (error) {
-    console.error(`❌ [${requestId}] Error getting saved recipes:`, error.message);
+    console.error(
+      `❌ [${requestId}] Error getting saved recipes:`,
+      error.message
+    );
     res.status(500).json({ error: error.message });
   }
 });
@@ -626,17 +929,24 @@ app.get("/api/saved-recipes", (req, res) => {
 app.delete("/api/delete-recipe/:recipeId", (req, res) => {
   const requestId = Date.now().toString(36);
   const { recipeId } = req.params;
-  
-  console.log(`\n🗑️ [${requestId}] Delete recipe request: ${recipeId} from device: ${req.deviceId?.substring(0, 8)}...`);
-  
+
+  console.log(
+    `\n🗑️ [${requestId}] Delete recipe request: ${recipeId} from device: ${req.deviceId?.substring(
+      0,
+      8
+    )}...`
+  );
+
   try {
     // In a real implementation, you'd delete from database
     // For now, we'll return success and let the client handle localStorage deletion
-    console.log(`✅ [${requestId}] Recipe deletion handled by client localStorage`);
-    res.json({ 
-      success: true, 
+    console.log(
+      `✅ [${requestId}] Recipe deletion handled by client localStorage`
+    );
+    res.json({
+      success: true,
       message: "Recipe deleted successfully",
-      recipeId: recipeId
+      recipeId: recipeId,
     });
   } catch (error) {
     console.error(`❌ [${requestId}] Error deleting recipe:`, error.message);
@@ -646,12 +956,12 @@ app.delete("/api/delete-recipe/:recipeId", (req, res) => {
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  const healthData = { 
-    status: "OK", 
+  const healthData = {
+    status: "OK",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    version: "1.0.0"
+    version: "1.0.0",
   };
   console.log("💚 Health check requested");
   res.json(healthData);
@@ -660,9 +970,12 @@ app.get("/api/health", (req, res) => {
 // Catch-all route for recipe URLs - serve the main page for any path that looks like a URL
 app.get("/*", (req, res) => {
   const urlPath = req.params[0];
-  
+
   // Check if the path looks like a URL (starts with http:// or https://)
-  if (urlPath && (urlPath.startsWith('http://') || urlPath.startsWith('https://'))) {
+  if (
+    urlPath &&
+    (urlPath.startsWith("http://") || urlPath.startsWith("https://"))
+  ) {
     console.log(`🔗 Recipe URL detected in path: ${urlPath}`);
     // Serve the main page - the frontend will handle the URL processing
     res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -683,6 +996,8 @@ app.listen(port, () => {
   console.log("   ✅ Recipe text processing");
   console.log("   ✅ File upload processing");
   console.log("   ✅ URL scraping and processing");
+  console.log("   ✅ General cooking chat");
+  console.log("   ✅ AI image generation (Nano Banana)");
   console.log("   ✅ Ingredient quantity extraction");
   console.log("   ✅ Device-based recipe storage");
   console.log("   ✅ localStorage recipe management");

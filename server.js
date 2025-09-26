@@ -72,7 +72,7 @@ async function processCookingChat(message, conversationHistory = []) {
     `📚 Conversation history: ${conversationHistory.length} messages`
   );
 
-  const systemPrompt = `You are a helpful cooking assistant and culinary expert. You can help with:
+  const systemPrompt = `You are a helpful cooking assistant and culinary expert for Cardamom Recipe Vault. You can help with:
 - Cooking techniques and tips
 - Ingredient substitutions
 - Recipe modifications
@@ -987,7 +987,7 @@ app.get("/*", (req, res) => {
 
 app.listen(port, () => {
   console.log("\n🚀 ================================================");
-  console.log("🍳 Recipe Flowchart Service Started Successfully!");
+  console.log("🌿 Cardamom - Recipe Vault Started Successfully!");
   console.log("🚀 ================================================");
   console.log(`🌐 Server running on port ${port}`);
   console.log(`🔗 Web interface: http://localhost:${port}`);

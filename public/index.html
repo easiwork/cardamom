@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recipe Flowchart Generator</title>
+    <title>Cardamom - Recipe Vault</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.4.0/dist/mermaid.min.js"></script>
     <script>
       // Check if Mermaid is loaded
@@ -799,8 +799,8 @@
         <!-- Left Sidebar - Recipe Cards -->
         <div class="sidebar">
           <div class="sidebar-header">
-            <h1>🍳 Recipe AI</h1>
-            <p>Transform recipes into beautiful flowcharts</p>
+            <h1>🌿 Cardamom</h1>
+            <p>Recipe Vault - Your culinary collection</p>
           </div>
 
           <button class="new-recipe-btn" onclick="startNewChat()">
@@ -864,17 +864,17 @@
           <!-- Chat Area -->
           <div class="chat-area">
             <div class="chat-header">
-              <h2 id="chatTitle">Recipe Chat</h2>
+              <h2 id="chatTitle">Cooking Assistant</h2>
             </div>
 
             <div class="chat-messages" id="chatMessages">
               <div class="welcome-message">
-                <h3>🍳 Welcome to Recipe AI</h3>
+                <h3>🌿 Welcome to Cardamom</h3>
                 <p>
-                  I'm your cooking assistant! I can help you with recipes,
-                  cooking tips, ingredient substitutions, and create beautiful
-                  flowcharts from your recipes. Feel free to ask me anything
-                  about cooking!
+                  Your personal recipe vault and cooking companion! Save
+                  recipes, get cooking tips, ingredient substitutions, and
+                  create beautiful flowcharts from your recipes. Let's explore
+                  the culinary world together!
                 </p>
 
                 <div class="welcome-examples">
@@ -915,7 +915,7 @@
                 <textarea
                   id="chatInput"
                   class="chat-input"
-                  placeholder="Ask me about cooking, share a recipe, or paste a recipe URL..."
+                  placeholder="Ask about cooking, share a recipe, or paste a recipe URL..."
                   rows="1"
                 ></textarea>
                 <button
@@ -1290,10 +1290,10 @@
         const chatMessages = document.getElementById("chatMessages");
         chatMessages.innerHTML = `
           <div class="welcome-message">
-            <h3>🍳 Welcome to Recipe AI</h3>
-            <p>I'm your cooking assistant! I can help you with recipes, cooking tips, 
+            <h3>🌿 Welcome to Cardamom</h3>
+            <p>Your personal recipe vault and cooking companion! Save recipes, get cooking tips, 
             ingredient substitutions, and create beautiful flowcharts from your recipes. 
-            Feel free to ask me anything about cooking!</p>
+            Let's explore the culinary world together!</p>
             
             <div class="welcome-examples">
               <div class="example-card" onclick="sendExampleMessage('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/')">
@@ -1446,9 +1446,9 @@
                   🗑️
                 </button>
                 </div>
+                </div>
               </div>
-          </div>
-        `
+            `
           )
           .join("");
       }

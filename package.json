@@ -1,7 +1,7 @@
 {
-  "name": "recipe-flowchart-service",
+  "name": "cardamom-recipe-vault",
   "version": "1.0.0",
-  "description": "A web service that transforms recipes into Mermaid flowcharts using OpenAI",
+  "description": "Cardamom - Recipe Vault: Your personal culinary collection and cooking companion",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -24,9 +24,12 @@
   },
   "keywords": [
     "recipe",
+    "cooking",
+    "culinary",
+    "vault",
+    "cardamom",
     "flowchart",
-    "mermaid",
-    "openai"
+    "mermaid"
   ],
   "author": "",
   "license": "MIT"

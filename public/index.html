@@ -1784,7 +1784,7 @@
             <div class="recipe-card-image">
               ${
                 recipe.data.imageUrl
-                  ? `<img src="${recipe.data.imageUrl}" alt="${recipe.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`
+                  ? `<img src="${recipe.data.imageUrl}" alt="${recipe.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="console.error('Failed to load recipe card image:', this.src, 'for recipe:', '${recipe.name}'); this.style.display='none'; this.parentElement.innerHTML='🍳';">`
                   : "🍳"
               }
             </div>
@@ -1795,9 +1795,13 @@
               ).toLocaleDateString()}</span>
               ${
                 recipe.data.originalUrl
-                  ? `<span class="recipe-card-url-indicator" title="Saved from ${
-                      new URL(recipe.data.originalUrl).hostname
-                    }">🌐</span>`
+                  ? `<span class="recipe-card-url-indicator" title="Saved from ${(() => {
+                      try {
+                        return new URL(recipe.data.originalUrl).hostname;
+                      } catch (e) {
+                        return "external site";
+                      }
+                    })()}">🌐</span>`
                   : ""
               }
               <div class="recipe-card-actions">
@@ -1860,9 +1864,15 @@
 
         // Show the main image on the front of the card
         if (recipeData.imageUrl) {
+          console.log("Setting main image imageUrl:", recipeData.imageUrl);
           mainImage.src = recipeData.imageUrl;
           mainImage.alt =
             recipeData.recipeName || recipeData.scrapedTitle || "Recipe";
+          mainImage.onerror = function () {
+            console.error("Failed to load main recipe image:", this.src);
+            this.style.display = "none";
+            imagePlaceholder.style.display = "block";
+          };
           mainImage.style.display = "block";
           imagePlaceholder.style.display = "none";
         } else {
@@ -1888,11 +1898,12 @@
 
         // Update recipe photo
         if (recipeData.imageUrl) {
+          console.log("Setting recipe photo imageUrl:", recipeData.imageUrl);
           recipePhotoElement.innerHTML = `<img src="${
             recipeData.imageUrl
           }" alt="${
             recipeData.recipeName || recipeData.scrapedTitle || "Recipe"
-          }" />`;
+          }" onerror="console.error('Failed to load recipe image:', this.src); this.style.display='none'; this.parentElement.innerHTML='🍳';" />`;
         } else {
           recipePhotoElement.innerHTML = "🍳";
         }
@@ -1908,9 +1919,13 @@
         const urlInfo = recipeData.originalUrl
           ? `<div><a href="${
               recipeData.originalUrl
-            }" target="_blank" rel="noopener noreferrer" style="color: #007aff; text-decoration: none; transition: color 0.2s ease;" onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007aff'" title="View original recipe on ${
-              new URL(recipeData.originalUrl).hostname
-            }">🌐 Original Recipe</a></div>`
+            }" target="_blank" rel="noopener noreferrer" style="color: #007aff; text-decoration: none; transition: color 0.2s ease;" onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007aff'" title="View original recipe on ${(() => {
+              try {
+                return new URL(recipeData.originalUrl).hostname;
+              } catch (e) {
+                return "external site";
+              }
+            })()}">🌐 Original Recipe</a></div>`
           : "";
         metaElement.innerHTML = `
           <div>${ingredientCount} ingredients</div>

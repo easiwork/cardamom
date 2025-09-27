@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flowchart.js Cooking Flow</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #fffaf3; padding: 24px }
+    h1 { margin-bottom: 12px }
+    #chart { border: 1px dashed #d17a22; background: #fff; padding: 12px; display: inline-block }
+    #chart svg { max-width: 100%; height: auto }
+  </style>
+</head>
+<body>
+  <h1>Recipe Flowchart</h1>
+  <div id="chart"></div>
+
+  <!-- try updated CDN links -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.15.0/flowchart.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!window.flowchart || !window.Raphael) {
+        console.error('flowchart or Raphael not loaded', window.flowchart, window.Raphael);
+        const msg = document.getElementById('chart');
+        msg.innerText = 'Error: flowchart or Raphael library not loaded. check console for details.';
+        return;
+      }
+
+      const code = `
+        st=>start: Prep Ingredients
+        e=>end: Serve
+        op1=>operation: Sear Protein
+        op2=>operation: Make Sauce
+        op3=>operation: Combine & Simmer
+        cond=>condition: Add garnish?
+
+        st->op1->op2->op3->cond
+        cond(yes)->e
+        cond(no)->e
+      `;
+
+      const chart = flowchart.parse(code);
+
+      chart.drawSVG('chart', {
+        'x': 0, 'y': 0,
+        'line-width': 2,
+        'line-length': 50,
+        'text-margin': 8,
+        'font-family': 'Inter, sans-serif',
+        'font-size': 14,
+        'font-weight': '500',
+        'line-color': '#7a4c1f',
+        'element-color': '#7a4c1f',
+        'fill': '#ffecd1',
+        'scale': 1,
+        'symbols': {
+          'start':     { 'fill': '#ffe4b5', 'stroke': '#d17a22' },
+          'end':       { 'fill': '#ffe4b5', 'stroke': '#d17a22' },
+          'operation': { 'fill': '#fff6e8', 'stroke': '#d17a22' },
+          'condition': { 'fill': '#fffaf0', 'stroke': '#d17a22' }
+        },
+        'yes-text': 'yes',
+        'no-text': 'no',
+        'flowstate': {}
+      });
+
+      const svg = document.querySelector('#chart svg');
+      if (svg) svg.removeAttribute('height');
+    });
+  </script>
+</body>
+</html>

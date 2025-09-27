@@ -215,6 +215,17 @@
         font-size: 0.7em;
       }
 
+      .recipe-card-url-indicator {
+        font-size: 0.8em;
+        margin-left: 8px;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+      }
+
+      .recipe-card:hover .recipe-card-url-indicator {
+        opacity: 1;
+      }
+
       .recipe-card-actions {
         display: flex;
         gap: 8px;
@@ -253,124 +264,307 @@
         display: flex;
         flex-direction: column;
         background: #f5f5f7;
+        transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .main-content.drawer-open {
+        margin-right: 400px;
       }
 
       /* Expanded Recipe View */
       .expanded-recipe-view {
-        height: 400px;
-        background: #ffffff;
-        border-bottom: 1px solid #e5e5e7;
+        flex: 1;
         display: none;
-        flex-direction: row;
-        overflow: hidden;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        min-height: calc(100vh - 28px);
+        perspective: 1000px;
       }
 
       .expanded-recipe-view.active {
         display: flex;
       }
 
+      .recipe-content-container {
+        width: 100%;
+        max-width: 1200px;
+        height: 600px;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .recipe-content-container.flipped {
+        transform: rotateY(180deg);
+      }
+
+      .recipe-card-front,
+      .recipe-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .recipe-card-front {
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .recipe-card-front img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 16px;
+      }
+
+      .recipe-card-back {
+        background: #ffffff;
+        transform: rotateY(180deg);
+        display: flex;
+        flex-direction: row;
+      }
+
       .recipe-details-panel {
-        flex: 1;
-        padding: 24px;
+        flex: 0 0 33.333%;
+        padding: 32px;
         overflow-y: auto;
+        background: #ffffff;
+        border-right: 1px solid #e5e5e7;
       }
 
       .recipe-details-header {
+        margin-bottom: 24px;
+      }
+
+      .recipe-photo {
+        width: 100%;
+        height: 200px;
+        background: #f5f5f7;
+        border-radius: 12px;
         margin-bottom: 20px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #86868b;
+        font-size: 1.2em;
+        border: 1px solid #e5e5e7;
+      }
+
+      .recipe-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
       }
 
       .recipe-details-title {
         font-size: 1.8em;
         font-weight: 700;
         color: #1d1d1f;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        line-height: 1.3;
       }
 
       .recipe-details-meta {
         display: flex;
-        gap: 16px;
+        flex-direction: column;
+        gap: 8px;
         font-size: 0.9em;
         color: #86868b;
-        margin-bottom: 20px;
-      }
-
-      .recipe-ingredients {
         margin-bottom: 24px;
       }
 
+      .recipe-ingredients {
+        margin-bottom: 32px;
+      }
+
       .recipe-ingredients h3 {
-        font-size: 1.1em;
-        font-weight: 600;
-        color: #1d1d1f;
-        margin-bottom: 12px;
-      }
-
-      .ingredient-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 8px;
-      }
-
-      .ingredient-item {
-        background: #f9f9f9;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 0.9em;
-        color: #1d1d1f;
-        border-left: 3px solid #007aff;
-      }
-
-      .recipe-flowchart-panel {
-        flex: 1;
-        padding: 24px;
-        background: #f9f9f9;
-        border-left: 1px solid #e5e5e7;
-        overflow-y: auto;
-      }
-
-      .recipe-flowchart-panel h3 {
-        font-size: 1.1em;
+        font-size: 1.2em;
         font-weight: 600;
         color: #1d1d1f;
         margin-bottom: 16px;
       }
 
+      .ingredient-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .ingredient-item {
+        background: #f9f9f9;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.95em;
+        color: #1d1d1f;
+        border-left: 4px solid #007aff;
+        transition: all 0.2s ease;
+      }
+
+      .ingredient-item:hover {
+        background: #f0f8ff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
+      }
+
+      .recipe-flowchart-panel {
+        flex: 0 0 66.667%;
+        padding: 0;
+        background: #ffffff;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
       .flowchart-container {
         background: #ffffff;
-        border: 1px solid #e5e5e7;
-        border-radius: 12px;
-        padding: 20px;
-        overflow-x: auto;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        overflow: auto;
+        box-shadow: none;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
       }
 
       .flowchart-container svg {
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 0;
+        box-shadow: none;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
       }
 
-      /* Chat Area */
-      .chat-area {
+      #expandedFlowchart {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex: 1;
+      }
+
+      /* Chat Toggle Button */
+      .chat-toggle-btn {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #007aff;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 20px;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .chat-toggle-btn:hover {
+        background: #0056b3;
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+      }
+
+      .chat-toggle-btn.pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+        50% {
+          box-shadow: 0 4px 12px rgba(0, 122, 255, 0.6), 0 0 0 10px rgba(0, 122, 255, 0.1);
+        }
+        100% {
+          box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+      }
+
+      .chat-toggle-icon {
+        font-size: 16px;
+      }
+
+      .chat-toggle-text {
+        font-size: 13px;
+      }
+
+      /* Chat Drawer */
+      .chat-drawer {
+        position: fixed;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100vh;
+        background: #ffffff;
+        border-left: 1px solid #e5e5e7;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1001;
         display: flex;
         flex-direction: column;
-        background: #ffffff;
-        margin: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         overflow: hidden;
       }
 
-      .chat-header {
+      .chat-drawer.open {
+        right: 0;
+      }
+
+      .chat-drawer-header {
         padding: 20px 24px;
         border-bottom: 1px solid #e5e5e7;
         background: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
-      .chat-header h2 {
+      .chat-drawer-header h2 {
         font-size: 1.2em;
         font-weight: 600;
+        color: #1d1d1f;
+        margin: 0;
+      }
+
+      .chat-close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #86868b;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chat-close-btn:hover {
+        background: #f2f2f7;
         color: #1d1d1f;
       }
 
@@ -729,6 +923,70 @@
           min-height: 0;
         }
 
+        .main-content.drawer-open {
+          margin-right: 0;
+        }
+
+        .expanded-recipe-view {
+          padding: 20px 10px;
+        }
+
+        .recipe-content-container {
+          height: 500px;
+          max-width: 100%;
+        }
+
+        .recipe-card-back {
+          flex-direction: column;
+        }
+
+        .recipe-details-panel {
+          flex: none;
+          padding: 20px;
+          border-right: none;
+          border-bottom: 1px solid #e5e5e7;
+        }
+
+        .recipe-photo {
+          height: 150px;
+        }
+
+        .recipe-details-title {
+          font-size: 1.6em;
+        }
+
+        .recipe-flowchart-panel {
+          flex: none;
+          padding: 0;
+        }
+
+        .flowchart-container {
+          padding: 0;
+          min-height: 300px;
+        }
+
+        .flowchart-container svg {
+          min-height: 250px;
+        }
+
+        .chat-drawer {
+          width: 100vw;
+          right: -100vw;
+        }
+
+        .chat-drawer.open {
+          right: 0;
+        }
+
+        .chat-toggle-btn {
+          right: 16px;
+          padding: 10px 16px;
+        }
+
+        .chat-toggle-text {
+          display: none;
+        }
+
         .chat-messages {
           padding: 16px;
         }
@@ -819,52 +1077,58 @@
         <div class="main-content">
           <!-- Expanded Recipe View -->
           <div class="expanded-recipe-view" id="expandedRecipeView">
-            <div class="recipe-details-panel">
-              <div class="recipe-details-header">
-                <h2 class="recipe-details-title" id="expandedRecipeTitle">
-                  Select a Recipe
-                </h2>
-                <div class="recipe-details-meta" id="expandedRecipeMeta">
-                  <!-- Recipe metadata will be populated here -->
-                </div>
+            <div class="recipe-content-container" id="recipeContentContainer">
+              <!-- Front of card - shows recipe image -->
+              <div class="recipe-card-front" id="recipeCardFront">
+                <img id="recipeMainImage" src="" alt="Recipe Image" style="display: none;">
+                <div id="recipeImagePlaceholder" style="font-size: 4em; color: #86868b;">🍳</div>
               </div>
 
-              <div class="recipe-ingredients" id="expandedRecipeIngredients">
-                <h3>Ingredients</h3>
-                <div class="ingredient-list" id="ingredientList">
-                  <!-- Ingredients will be populated here -->
-                </div>
-              </div>
-            </div>
+              <!-- Back of card - shows recipe details and flowchart -->
+              <div class="recipe-card-back">
+                <div class="recipe-details-panel">
+                  <div class="recipe-details-header">
+                    <div class="recipe-photo" id="recipePhoto">
+                      🍳
+                    </div>
+                    <h2 class="recipe-details-title" id="expandedRecipeTitle">
+                      Select a Recipe
+                    </h2>
+                    <div class="recipe-details-meta" id="expandedRecipeMeta">
+                      <!-- Recipe metadata will be populated here -->
+                    </div>
+                  </div>
 
-            <div class="recipe-flowchart-panel">
-              <h3>Recipe Flowchart</h3>
-              <div class="flowchart-container" id="expandedFlowchartContainer">
-                <div id="expandedFlowchart">
-                  <!-- Flowchart will be rendered here -->
+                  <div class="recipe-ingredients" id="expandedRecipeIngredients">
+                    <h3>Ingredients</h3>
+                    <div class="ingredient-list" id="ingredientList">
+                      <!-- Ingredients will be populated here -->
+                    </div>
+                  </div>
                 </div>
-                <div class="flowchart-actions">
-                  <button
-                    class="flowchart-btn primary"
-                    onclick="downloadExpandedFlowchart()"
-                  >
-                    💾 Download Flowchart
-                  </button>
-                  <button
-                    class="flowchart-btn"
-                    onclick="toggleExpandedRawCode()"
-                  >
-                    🔍 Show Raw Code
-                  </button>
+
+                <div class="recipe-flowchart-panel">
+                  <div class="flowchart-container" id="expandedFlowchartContainer">
+                    <div id="expandedFlowchart">
+                      <!-- Flowchart will be rendered here -->
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Chat Area -->
-          <div class="chat-area">
-            <div class="chat-header">
+          <!-- Chat Toggle Button -->
+          <button class="chat-toggle-btn" id="chatToggleBtn" onclick="toggleChatDrawer()">
+            <span class="chat-toggle-icon">💬</span>
+            <span class="chat-toggle-text">Assistant</span>
+          </button>
+
+          <!-- Chat Drawer -->
+          <div class="chat-drawer" id="chatDrawer">
+            <div class="chat-drawer-header">
               <h2 id="chatTitle">Cooking Assistant</h2>
+              <button class="chat-close-btn" onclick="toggleChatDrawer()">×</button>
             </div>
 
             <div class="chat-messages" id="chatMessages">
@@ -940,6 +1204,10 @@
         flowchart: {
           useMaxWidth: true,
           htmlLabels: true,
+          width: "100%",
+        },
+        themeVariables: {
+          fontSize: "14px",
         },
       });
 
@@ -949,6 +1217,7 @@
       let isProcessing = false;
       let currentRecipeId = null;
       let conversationHistory = [];
+      let chatDrawerOpen = false;
 
       // Chat interface functions
       function addMessage(content, type = "user", timestamp = new Date()) {
@@ -1136,6 +1405,9 @@
 
         if (!message || isProcessing) return;
 
+        // Open chat drawer if not already open
+        openChatDrawer();
+
         // Clear input and add user message
         chatInput.value = "";
         addMessage(message, "user");
@@ -1213,10 +1485,31 @@
           }
         } catch (error) {
           removeTypingIndicator();
-          addMessage(
-            `Sorry, I encountered an error: ${error.message}`,
-            "assistant"
-          );
+          
+          // Provide helpful suggestions for common errors
+          let errorMessage = `Sorry, I encountered an error: ${error.message}`;
+          
+          if (error.message.includes("403 Forbidden") || error.message.includes("Access denied")) {
+            errorMessage += `
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 16px; margin-top: 12px;">
+              <h4 style="color: #856404; margin: 0 0 8px 0;">💡 Alternative Solution</h4>
+              <p style="color: #856404; margin: 0; font-size: 0.9em;">
+                This website blocks automated requests. You can still create a flowchart by copying and pasting the recipe text directly into the chat!
+              </p>
+            </div>`;
+          } else if (error.message.includes("429") || error.message.includes("rate limiting")) {
+            errorMessage += `
+            
+            <div style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin-top: 12px;">
+              <h4 style="color: #0c5460; margin: 0 0 8px 0;">⏳ Please Wait</h4>
+              <p style="color: #0c5460; margin: 0; font-size: 0.9em;">
+                The website is temporarily limiting requests. Please wait a moment and try again, or copy-paste the recipe text instead.
+              </p>
+            </div>`;
+          }
+          
+          addMessage(errorMessage, "assistant");
         } finally {
           isProcessing = false;
           updateSendButton();
@@ -1286,6 +1579,41 @@
         }
       }
 
+      // Chat drawer functions
+      function toggleChatDrawer() {
+        const chatDrawer = document.getElementById("chatDrawer");
+        const mainContent = document.querySelector(".main-content");
+        const toggleBtn = document.getElementById("chatToggleBtn");
+        
+        chatDrawerOpen = !chatDrawerOpen;
+        
+        if (chatDrawerOpen) {
+          chatDrawer.classList.add("open");
+          mainContent.classList.add("drawer-open");
+          toggleBtn.style.opacity = "0.7";
+        } else {
+          chatDrawer.classList.remove("open");
+          mainContent.classList.remove("drawer-open");
+          toggleBtn.style.opacity = "1";
+        }
+      }
+
+      function openChatDrawer() {
+        if (!chatDrawerOpen) {
+          toggleChatDrawer();
+        }
+      }
+
+      function pulseChatButton() {
+        const toggleBtn = document.getElementById("chatToggleBtn");
+        if (toggleBtn && !chatDrawerOpen) {
+          toggleBtn.classList.add("pulse");
+          setTimeout(() => {
+            toggleBtn.classList.remove("pulse");
+          }, 4000);
+        }
+      }
+
       function startNewChat() {
         const chatMessages = document.getElementById("chatMessages");
         chatMessages.innerHTML = `
@@ -1329,6 +1657,9 @@
 
         // Update recipe cards to remove active state
         updateRecipeCards();
+        
+        // Open chat drawer for new chat
+        openChatDrawer();
       }
 
       // Storage and recipe management
@@ -1434,6 +1765,11 @@
               <span class="recipe-card-date">${new Date(
                 recipe.timestamp
               ).toLocaleDateString()}</span>
+              ${
+                recipe.data.originalUrl
+                  ? `<span class="recipe-card-url-indicator" title="Saved from ${new URL(recipe.data.originalUrl).hostname}">🌐</span>`
+                  : ""
+              }
               <div class="recipe-card-actions">
                 <button class="recipe-card-btn" onclick="event.stopPropagation(); downloadRecipe('${
                   recipe.id
@@ -1466,8 +1802,8 @@
         currentRecipeData = recipe.data;
         currentRecipeId = recipeId;
 
-        // Show expanded recipe view
-        showExpandedRecipeView(recipe.data);
+        // Show expanded recipe view with flip animation
+        showExpandedRecipeViewWithFlip(recipe.data);
 
         // Add ingredients and steps to chat
         addRecipeToChat(recipe.data);
@@ -1476,15 +1812,51 @@
         updateRecipeCards();
       }
 
-      function showExpandedRecipeView(recipeData) {
+      function showExpandedRecipeViewWithFlip(recipeData) {
         const expandedView = document.getElementById("expandedRecipeView");
+        const contentContainer = document.getElementById("recipeContentContainer");
+        const mainImage = document.getElementById("recipeMainImage");
+        const imagePlaceholder = document.getElementById("recipeImagePlaceholder");
+
+        // Show the expanded view
+        expandedView.classList.add("active");
+
+        // Reset the card to front position
+        contentContainer.classList.remove("flipped");
+
+        // Show the main image on the front of the card
+        if (recipeData.imageUrl) {
+          mainImage.src = recipeData.imageUrl;
+          mainImage.alt = recipeData.recipeName || recipeData.scrapedTitle || "Recipe";
+          mainImage.style.display = "block";
+          imagePlaceholder.style.display = "none";
+        } else {
+          mainImage.style.display = "none";
+          imagePlaceholder.style.display = "block";
+        }
+
+        // Prepare the back of the card with recipe details
+        prepareRecipeDetails(recipeData);
+
+        // Auto-flip after 1 second
+        setTimeout(() => {
+          contentContainer.classList.add("flipped");
+        }, 1000);
+      }
+
+      function prepareRecipeDetails(recipeData) {
         const titleElement = document.getElementById("expandedRecipeTitle");
         const metaElement = document.getElementById("expandedRecipeMeta");
         const ingredientsElement = document.getElementById("ingredientList");
         const flowchartElement = document.getElementById("expandedFlowchart");
+        const recipePhotoElement = document.getElementById("recipePhoto");
 
-        // Show the expanded view
-        expandedView.classList.add("active");
+        // Update recipe photo
+        if (recipeData.imageUrl) {
+          recipePhotoElement.innerHTML = `<img src="${recipeData.imageUrl}" alt="${recipeData.recipeName || recipeData.scrapedTitle || 'Recipe'}" />`;
+        } else {
+          recipePhotoElement.innerHTML = "🍳";
+        }
 
         // Update title
         const recipeName =
@@ -1494,12 +1866,14 @@
         // Update metadata
         const ingredientCount = recipeData.ingredients?.length || 0;
         const actionCount = recipeData.actions?.length || 0;
+        const urlInfo = recipeData.originalUrl 
+          ? `<div><a href="${recipeData.originalUrl}" target="_blank" rel="noopener noreferrer" style="color: #007aff; text-decoration: none; transition: color 0.2s ease;" onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007aff'" title="View original recipe on ${new URL(recipeData.originalUrl).hostname}">🌐 Original Recipe</a></div>`
+          : "";
         metaElement.innerHTML = `
-          <span>${ingredientCount} ingredients</span>
-          <span>•</span>
-          <span>${actionCount} steps</span>
-          <span>•</span>
-          <span>${new Date().toLocaleDateString()}</span>
+          <div>${ingredientCount} ingredients</div>
+          <div>${actionCount} steps</div>
+          <div>${new Date().toLocaleDateString()}</div>
+          ${urlInfo}
         `;
 
         // Update ingredients
@@ -1527,6 +1901,18 @@
         }
       }
 
+      function showExpandedRecipeView(recipeData) {
+        const expandedView = document.getElementById("expandedRecipeView");
+        const contentContainer = document.getElementById("recipeContentContainer");
+
+        // Show the expanded view
+        expandedView.classList.add("active");
+
+        // Show the back of the card directly (for non-flip scenarios)
+        contentContainer.classList.add("flipped");
+        prepareRecipeDetails(recipeData);
+      }
+
       function renderExpandedFlowchart(mermaidCode) {
         const flowchartElement = document.getElementById("expandedFlowchart");
         const diagramId = "expanded-mermaid-diagram-" + Date.now();
@@ -1537,6 +1923,11 @@
         // Create container for the diagram
         const diagramContainer = document.createElement("div");
         diagramContainer.id = diagramId;
+        diagramContainer.style.width = "100%";
+        diagramContainer.style.height = "100%";
+        diagramContainer.style.display = "flex";
+        diagramContainer.style.alignItems = "center";
+        diagramContainer.style.justifyContent = "center";
         flowchartElement.appendChild(diagramContainer);
 
         // Render the Mermaid diagram
@@ -1547,6 +1938,14 @@
               mermaidCode
             );
             diagramContainer.innerHTML = svg;
+            
+            // Ensure the SVG takes full width
+            const svgElement = diagramContainer.querySelector('svg');
+            if (svgElement) {
+              svgElement.style.width = "100%";
+              svgElement.style.height = "auto";
+              svgElement.style.maxWidth = "100%";
+            }
           } catch (error) {
             console.error("Mermaid rendering error:", error);
             diagramContainer.innerHTML = `<div style="color: #ff3b30; padding: 16px; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;">

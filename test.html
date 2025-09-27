@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<svg width="800" height="400"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+const nodes = [
+  { id: 'prep',     label: 'Prep Ingredients', x:100, y:50 },
+  { id: 'cook',     label: 'Cook',            x:350, y:150 },
+  { id: 'plating',  label: 'Plating',         x:600, y:50 },
+  { id: 'serve',    label: 'Serve',           x:350, y:300 }
+]
+
+const links = [
+  { source:'prep',    target:'cook' },
+  { source:'cook',    target:'plating' },
+  { source:'cook',    target:'serve'   },
+  { source:'plating', target:'serve'   }
+]
+
+const svg = d3.select('svg')
+
+svg.selectAll('line')
+  .data(links)
+  .enter()
+  .append('line')
+  .attr('x1', d => nodes.find(n => n.id===d.source).x)
+  .attr('y1', d => nodes.find(n => n.id===d.source).y)
+  .attr('x2', d => nodes.find(n => n.id===d.target).x)
+  .attr('y2', d => nodes.find(n => n.id===d.target).y)
+  .attr('stroke', '#999')
+  .attr('stroke-width', 2)
+  .attr('marker-end','url(#arrow)')
+
+// arrowhead defs
+svg.append('defs').append('marker')
+  .attr('id','arrow')
+  .attr('viewBox','0 -5 10 10')
+  .attr('refX',10)
+  .attr('refY',0)
+  .attr('markerWidth',6)
+  .attr('markerHeight',6)
+  .attr('orient','auto')
+  .append('path')
+  .attr('d','M0,-5L10,0L0,5')
+  .attr('fill','#999')
+
+const node = svg.selectAll('g.node')
+  .data(nodes)
+  .enter()
+  .append('g')
+  .attr('class','node')
+  .attr('transform', d => `translate(${d.x},${d.y})`)
+
+node.append('rect')
+  .attr('x',-80).attr('y',-20)
+  .attr('width',160).attr('height',40)
+  .attr('rx',10).attr('ry',10)
+  .attr('fill','#ffecd1')
+  .attr('stroke','#d17a22').attr('stroke-width',2)
+
+node.append('text')
+  .text(d => d.label)
+  .attr('text-anchor','middle')
+  .attr('alignment-baseline','middle')
+  .style('font-family','sans-serif')
+  .style('font-size','14px')
+</script>
+</body>

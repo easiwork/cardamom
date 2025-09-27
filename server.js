@@ -397,13 +397,65 @@ async function scrapeRecipeFromURL(url) {
     console.log("📡 Fetching webpage...");
     const fetchStartTime = Date.now();
 
-    const response = await axios.get(url, {
-      timeout: 10000,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      },
-    });
+    // Try multiple user agents and headers to avoid 403 errors
+    const userAgents = [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+    ];
+
+    let response;
+    let lastError;
+
+    for (let i = 0; i < userAgents.length; i++) {
+      try {
+        console.log(`🔄 Attempt ${i + 1}/${userAgents.length} with User-Agent: ${userAgents[i].substring(0, 50)}...`);
+        
+        response = await axios.get(url, {
+          timeout: 15000,
+          headers: {
+            "User-Agent": userAgents[i],
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0"
+          },
+          maxRedirects: 5,
+          validateStatus: function (status) {
+            return status >= 200 && status < 400; // Accept redirects
+          }
+        });
+        
+        console.log(`✅ Success with attempt ${i + 1}`);
+        break; // Success, exit the loop
+        
+      } catch (error) {
+        lastError = error;
+        console.log(`❌ Attempt ${i + 1} failed: ${error.response?.status} ${error.response?.statusText || error.message}`);
+        
+        // If we get a 403, try the next user agent
+        if (error.response?.status === 403 && i < userAgents.length - 1) {
+          console.log(`🔄 403 Forbidden, trying next user agent...`);
+          // Add a small delay between attempts
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        
+        // If it's not a 403 or we've tried all user agents, throw the error
+        throw error;
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error("All scraping attempts failed");
+    }
 
     const fetchTime = Date.now() - fetchStartTime;
     console.log(
@@ -539,6 +591,22 @@ async function scrapeRecipeFromURL(url) {
       );
     } else if (error.code === "ECONNABORTED") {
       throw new Error("Request timeout. The website took too long to respond.");
+    } else if (error.response?.status === 403) {
+      throw new Error(
+        "Access denied (403 Forbidden). This website blocks automated requests. Please try copying and pasting the recipe text directly instead."
+      );
+    } else if (error.response?.status === 429) {
+      throw new Error(
+        "Too many requests (429). The website is rate limiting requests. Please wait a moment and try again."
+      );
+    } else if (error.response?.status === 404) {
+      throw new Error(
+        "Recipe not found (404). The URL may be incorrect or the recipe may have been removed."
+      );
+    } else if (error.response?.status >= 500) {
+      throw new Error(
+        `Server error (${error.response.status}). The website is experiencing issues. Please try again later.`
+      );
     } else if (error.message.includes("Invalid URL")) {
       throw new Error(error.message);
     } else {

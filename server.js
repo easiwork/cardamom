@@ -27,6 +27,27 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("public"));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const requestId = Date.now().toString(36);
+  console.log(
+    `\n📡 [${requestId}] ================================================`
+  );
+  console.log(`📡 [${requestId}] Incoming request: ${req.method} ${req.url}`);
+  console.log(`📡 [${requestId}] Request path: ${req.path}`);
+  console.log(`📡 [${requestId}] Request headers:`, req.headers);
+  console.log(`📡 [${requestId}] Client IP: ${req.ip}`);
+  console.log(`📡 [${requestId}] User-Agent: ${req.get("User-Agent")}`);
+  console.log(
+    `📡 [${requestId}] ================================================`
+  );
+
+  // Add request ID to the request object for use in route handlers
+  req.requestId = requestId;
+
+  next();
+});
+
 // Device ID middleware - ensures each device has a unique identifier
 app.use((req, res, next) => {
   if (!req.cookies.deviceId) {
@@ -402,7 +423,7 @@ async function scrapeRecipeFromURL(url) {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
     ];
 
     let response;
@@ -410,44 +431,52 @@ async function scrapeRecipeFromURL(url) {
 
     for (let i = 0; i < userAgents.length; i++) {
       try {
-        console.log(`🔄 Attempt ${i + 1}/${userAgents.length} with User-Agent: ${userAgents[i].substring(0, 50)}...`);
-        
+        console.log(
+          `🔄 Attempt ${i + 1}/${
+            userAgents.length
+          } with User-Agent: ${userAgents[i].substring(0, 50)}...`
+        );
+
         response = await axios.get(url, {
           timeout: 15000,
           headers: {
             "User-Agent": userAgents[i],
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
-            "DNT": "1",
-            "Connection": "keep-alive",
+            DNT: "1",
+            Connection: "keep-alive",
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "none",
-            "Cache-Control": "max-age=0"
+            "Cache-Control": "max-age=0",
           },
           maxRedirects: 5,
           validateStatus: function (status) {
             return status >= 200 && status < 400; // Accept redirects
-          }
+          },
         });
-        
+
         console.log(`✅ Success with attempt ${i + 1}`);
         break; // Success, exit the loop
-        
       } catch (error) {
         lastError = error;
-        console.log(`❌ Attempt ${i + 1} failed: ${error.response?.status} ${error.response?.statusText || error.message}`);
-        
+        console.log(
+          `❌ Attempt ${i + 1} failed: ${error.response?.status} ${
+            error.response?.statusText || error.message
+          }`
+        );
+
         // If we get a 403, try the next user agent
         if (error.response?.status === 403 && i < userAgents.length - 1) {
           console.log(`🔄 403 Forbidden, trying next user agent...`);
           // Add a small delay between attempts
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        
+
         // If it's not a 403 or we've tried all user agents, throw the error
         throw error;
       }
@@ -623,12 +652,27 @@ app.get("/", (req, res) => {
 // Route to handle direct recipe URL processing via path parameter
 app.get("/api/process-url/*", async (req, res) => {
   const requestId = Date.now().toString(36);
-  console.log(`\n🌐 [${requestId}] Direct URL processing request`);
+  console.log(
+    `\n🌐 [${requestId}] ================================================`
+  );
+  console.log(`🌐 [${requestId}] Direct URL processing request received!`);
+  console.log(`🌐 [${requestId}] Request method: ${req.method}`);
+  console.log(`🌐 [${requestId}] Request URL: ${req.url}`);
+  console.log(`🌐 [${requestId}] Request path: ${req.path}`);
+  console.log(`🌐 [${requestId}] Request params:`, req.params);
+  console.log(`🌐 [${requestId}] Request headers:`, req.headers);
+  console.log(`🌐 [${requestId}] Client IP: ${req.ip}`);
+  console.log(
+    `🌐 [${requestId}] ================================================`
+  );
 
   try {
     // Extract the URL from the path (everything after /api/process-url/)
     const urlPath = req.params[0]; // This captures everything after the route
+    console.log(`🔍 [${requestId}] Raw URL path from params[0]:`, urlPath);
+
     const recipeUrl = decodeURIComponent(urlPath);
+    console.log(`🔍 [${requestId}] Decoded recipe URL:`, recipeUrl);
 
     if (!recipeUrl) {
       console.log(`❌ [${requestId}] Missing URL in path`);
@@ -1024,14 +1068,30 @@ app.delete("/api/delete-recipe/:recipeId", (req, res) => {
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(
+    `\n💚 [${requestId}] ================================================`
+  );
+  console.log(`💚 [${requestId}] Health check request received!`);
+  console.log(`💚 [${requestId}] Request method: ${req.method}`);
+  console.log(`💚 [${requestId}] Request URL: ${req.url}`);
+  console.log(`💚 [${requestId}] Request path: ${req.path}`);
+  console.log(`💚 [${requestId}] Request headers:`, req.headers);
+  console.log(`💚 [${requestId}] Client IP: ${req.ip}`);
+  console.log(
+    `💚 [${requestId}] ================================================`
+  );
+
   const healthData = {
     status: "OK",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     version: "1.0.0",
+    requestId: requestId,
   };
-  console.log("💚 Health check requested");
+
+  console.log(`💚 [${requestId}] Health check data:`, healthData);
   res.json(healthData);
 });
 
@@ -1060,6 +1120,12 @@ app.listen(port, () => {
   console.log(`🌐 Server running on port ${port}`);
   console.log(`🔗 Web interface: http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/api/health`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`📁 Working directory: ${process.cwd()}`);
+  console.log(`📁 Server file location: ${__dirname}`);
+  console.log("🚀 ================================================");
+  console.log("📡 Server is ready to receive requests!");
+  console.log("🚀 ================================================");
   console.log("📝 Features enabled:");
   console.log("   ✅ Recipe text processing");
   console.log("   ✅ File upload processing");

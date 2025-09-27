@@ -16,8 +16,7 @@ const pulse = keyframes`
 const ToggleButton = styled.button`
   position: fixed;
   right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 20px;
   background: #007aff;
   border: none;
   border-radius: 25px;
@@ -36,7 +35,7 @@ const ToggleButton = styled.button`
 
   &:hover {
     background: #0056b3;
-    transform: translateY(-50%) scale(1.05);
+    transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
   }
 
@@ -46,6 +45,7 @@ const ToggleButton = styled.button`
 
   @media (max-width: 768px) {
     right: 16px;
+    bottom: 16px;
     padding: 10px 16px;
   }
 `;

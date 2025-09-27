@@ -8,12 +8,48 @@ const SidebarContainer = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: ${props => props.isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const Header = styled.div`
   padding: 24px 20px 16px;
   border-bottom: 1px solid #e5e5e7;
   background: #ffffff;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #86868b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+
+  &:hover {
+    background: #f5f5f7;
+    color: #1d1d1f;
+  }
 `;
 
 const Title = styled.h1`
@@ -173,7 +209,7 @@ const EmptyState = styled.p`
   padding: 20px;
 `;
 
-const Sidebar = ({ recipes, currentRecipeId, onNewRecipe, onLoadRecipe, onDeleteRecipe }) => {
+const Sidebar = ({ recipes, currentRecipeId, onNewRecipe, onLoadRecipe, onDeleteRecipe, isOpen, onClose }) => {
   const handleDeleteRecipe = (e, recipeId) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this recipe?')) {
@@ -197,10 +233,11 @@ const Sidebar = ({ recipes, currentRecipeId, onNewRecipe, onLoadRecipe, onDelete
   };
 
   return (
-    <SidebarContainer>
+    <SidebarContainer isOpen={isOpen}>
       <Header>
         <Title>🌿 Cardamom</Title>
         <Subtitle>Recipe Vault - Your culinary collection</Subtitle>
+        <CloseButton onClick={onClose}>×</CloseButton>
       </Header>
 
       <NewRecipeButton onClick={onNewRecipe}>

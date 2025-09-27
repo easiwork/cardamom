@@ -32,10 +32,57 @@ const MainContent = styled.div`
   height: calc(100vh - 28px);
   transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-right: ${props => props.chatDrawerOpen ? '400px' : '0'};
+  
+  @media (max-width: 768px) {
+    margin-right: 0;
+    position: relative;
+  }
+`;
+
+const SidebarToggleButton = styled.button`
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: #007aff;
+  border: none;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  transition: all 0.2s ease;
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+
+  &:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+  }
+`;
+
+const SidebarOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  display: ${props => props.show ? 'block' : 'none'};
+  
+  @media (min-width: 769px) {
+    display: none;
+  }
 `;
 
 function App() {
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { 
     recipes, 
     currentRecipe, 
@@ -110,14 +157,55 @@ function App() {
     setChatDrawerOpen(!chatDrawerOpen);
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   const handleSendMessage = (message) => {
     sendMessage(message, handleRecipeProcessed);
+  };
+
+  const handleUpdateRecipe = async (markdownText) => {
+    // Process the markdown text as a new recipe through the API
+    try {
+      const response = await fetch('/api/process-recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: markdownText,
+          deviceId: deviceId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process recipe');
+      }
+
+      const recipeData = await response.json();
+      const recipeId = saveRecipe(recipeData);
+      if (recipeId) {
+        loadRecipe(recipeId);
+      }
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+      throw error;
+    }
   };
 
   return (
     <AppContainer>
       <MacWindow>
         <MacTitleBar />
+        <SidebarToggleButton onClick={toggleSidebar}>
+          ☰
+        </SidebarToggleButton>
+        <SidebarOverlay show={sidebarOpen} onClick={closeSidebar} />
         <MainContent chatDrawerOpen={chatDrawerOpen}>
           <Sidebar
             recipes={recipes}
@@ -125,10 +213,13 @@ function App() {
             onNewRecipe={handleNewChat}
             onLoadRecipe={loadRecipe}
             onDeleteRecipe={deleteRecipe}
+            isOpen={sidebarOpen}
+            onClose={closeSidebar}
           />
           <RecipeView
             currentRecipe={currentRecipe}
             onClearRecipe={clearCurrentRecipe}
+            onUpdateRecipe={handleUpdateRecipe}
           />
           <ChatToggleButton
             onClick={toggleChatDrawer}

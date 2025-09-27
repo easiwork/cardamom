@@ -195,7 +195,13 @@ async function generateRecipeImage(recipeData) {
         const buffer = Buffer.from(imageData, "base64");
 
         // Create images directory if it doesn't exist
-        const imagesDir = path.join(__dirname, "public", "images");
+        let imagesDir;
+        if (process.env.NODE_ENV === 'production') {
+          imagesDir = path.join(__dirname, "dist", "images");
+        } else {
+          imagesDir = path.join(__dirname, "public", "images");
+        }
+
         if (!fs.existsSync(imagesDir)) {
           fs.mkdirSync(imagesDir, { recursive: true });
         }

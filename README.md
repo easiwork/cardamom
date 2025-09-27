@@ -1,6 +1,15 @@
-# Recipe Flowchart Generator
+# Cardamom - Recipe Vault
 
-A web service that transforms recipes into beautiful Mermaid flowcharts using OpenAI's structured outputs. The service analyzes recipe text and creates visual flowcharts showing the transformation of ingredients through cooking actions.
+A modern React single-page application that transforms recipes into beautiful Mermaid flowcharts using OpenAI's structured outputs. The service analyzes recipe text and creates visual flowcharts showing the transformation of ingredients through cooking actions.
+
+## 🚀 New React Frontend
+
+The application has been refactored to use a modern React frontend with:
+- **React 18** with hooks and functional components
+- **Vite** for fast development and building
+- **Styled Components** for component-scoped styling
+- **Custom hooks** for state management
+- **Responsive design** with mobile support
 
 ## Features
 
@@ -36,18 +45,27 @@ A web service that transforms recipes into beautiful Mermaid flowcharts using Op
 
 3. **Start the Service**
 
+   **Development Mode (React + Backend):**
    ```bash
-   npm start
+   # Terminal 1: Start the backend server
+   npm run dev
+   
+   # Terminal 2: Start the React development server
+   npm run dev:react
    ```
 
-   For development with auto-reload:
-
+   **Production Mode:**
    ```bash
-   npm run dev
+   # Build the React app
+   npm run build
+   
+   # Start the production server
+   NODE_ENV=production npm start
    ```
 
 4. **Access the Web Interface**
-   Open http://localhost:3000 in your browser
+   - **Development**: http://localhost:3001 (React app)
+   - **Production**: http://localhost:3000
 
 ## Direct URL Processing
 

@@ -25,7 +25,12 @@ const openai = new OpenAI({
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static("public"));
+// Serve static files - React build in production, public folder in development
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static("dist"));
+} else {
+  app.use(express.static("public"));
+}
 
 // Device ID middleware - ensures each device has a unique identifier
 app.use((req, res, next) => {
@@ -617,7 +622,11 @@ async function scrapeRecipeFromURL(url) {
 
 // Routes
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  if (process.env.NODE_ENV === 'production') {
+    res.sendFile(path.join(__dirname, "dist", "index.html"));
+  } else {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  }
 });
 
 // Route to handle direct recipe URL processing via path parameter
@@ -1046,10 +1055,18 @@ app.get("/*", (req, res) => {
   ) {
     console.log(`🔗 Recipe URL detected in path: ${urlPath}`);
     // Serve the main page - the frontend will handle the URL processing
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    if (process.env.NODE_ENV === 'production') {
+      res.sendFile(path.join(__dirname, "dist", "index.html"));
+    } else {
+      res.sendFile(path.join(__dirname, "public", "index.html"));
+    }
   } else {
     // For any other path, serve the main page
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    if (process.env.NODE_ENV === 'production') {
+      res.sendFile(path.join(__dirname, "dist", "index.html"));
+    } else {
+      res.sendFile(path.join(__dirname, "public", "index.html"));
+    }
   }
 });
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test localStorage</title>
+</head>
+<body>
+    <h1>Test localStorage Functionality</h1>
+    <button onclick="testSave()">Test Save Recipe</button>
+    <button onclick="testLoad()">Test Load Recipes</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <div id="output"></div>
+
+    <script>
+        function testSave() {
+            const deviceId = 'test_device_123';
+            const recipeData = {
+                recipeName: 'Test Recipe',
+                ingredients: [{ id: 'test', name: 'Test Ingredient', quantity: '1 cup' }],
+                actions: [{ id: 'test_action', name: 'Test Action', duration: 5 }],
+                mermaidDiagram: 'graph TD; test[Test] --> result[Result];'
+            };
+
+            const recipeId = 'recipe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const recipeToSave = {
+                id: recipeId,
+                name: recipeData.recipeName,
+                data: recipeData,
+                timestamp: new Date().toISOString(),
+                deviceId: deviceId,
+            };
+
+            const existingRecipes = JSON.parse(localStorage.getItem(`savedRecipes_${deviceId}`) || '[]');
+            const updatedRecipes = [recipeToSave, ...existingRecipes];
+
+            localStorage.setItem(`savedRecipes_${deviceId}`, JSON.stringify(updatedRecipes));
+            
+            document.getElementById('output').innerHTML = `
+                <p>✅ Recipe saved successfully!</p>
+                <p>Recipe ID: ${recipeId}</p>
+                <p>Total recipes: ${updatedRecipes.length}</p>
+            `;
+        }
+
+        function testLoad() {
+            const deviceId = 'test_device_123';
+            const saved = localStorage.getItem(`savedRecipes_${deviceId}`);
+            const recipes = saved ? JSON.parse(saved) : [];
+            
+            document.getElementById('output').innerHTML = `
+                <p>📚 Loaded ${recipes.length} recipes:</p>
+                <ul>
+                    ${recipes.map(recipe => `<li>${recipe.name} (${recipe.id})</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        function clearStorage() {
+            const deviceId = 'test_device_123';
+            localStorage.removeItem(`savedRecipes_${deviceId}`);
+            document.getElementById('output').innerHTML = '<p>🗑️ Storage cleared</p>';
+        }
+    </script>
+</body>
+</html>

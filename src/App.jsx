@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useRecipes } from './hooks/useRecipes';
 import { useChat } from './hooks/useChat';
@@ -40,6 +40,7 @@ function App() {
     recipes, 
     currentRecipe, 
     currentRecipeId, 
+    deviceId,
     saveRecipe, 
     loadRecipe, 
     deleteRecipe, 
@@ -55,11 +56,49 @@ function App() {
   } = useChat();
 
   const handleRecipeProcessed = (recipeData) => {
+    console.log('🍳 handleRecipeProcessed called with:', recipeData);
     const recipeId = saveRecipe(recipeData);
+    console.log('💾 Recipe saved with ID:', recipeId);
     if (recipeId) {
       loadRecipe(recipeId);
+      console.log('📖 Recipe loaded:', recipeId);
     }
   };
+
+  // Check for recipe URL in the path on app load
+  useEffect(() => {
+    // Only proceed if deviceId is available
+    if (!deviceId) {
+      console.log('⏳ Waiting for deviceId to be initialized...');
+      return;
+    }
+
+    const checkForRecipeUrl = () => {
+      const path = window.location.pathname;
+      
+      // Check if the path looks like a recipe URL (starts with http:// or https://)
+      if (path && (path.startsWith('/http://') || path.startsWith('/https://'))) {
+        const recipeUrl = path.substring(1); // Remove the leading slash
+        
+        console.log('🔗 Recipe URL detected in path:', recipeUrl);
+        console.log('✅ DeviceId is available:', deviceId);
+        
+        // Open chat drawer and process the URL
+        setChatDrawerOpen(true);
+        
+        // Add a message indicating we're processing the URL
+        addMessage(`Processing recipe from URL: ${recipeUrl}`, 'user');
+        
+        // Process the URL
+        sendMessage(recipeUrl, handleRecipeProcessed);
+        
+        // Clean up the URL from the browser history
+        window.history.replaceState({}, document.title, '/');
+      }
+    };
+
+    checkForRecipeUrl();
+  }, [deviceId, addMessage, sendMessage, handleRecipeProcessed]);
 
   const handleNewChat = () => {
     clearMessages();

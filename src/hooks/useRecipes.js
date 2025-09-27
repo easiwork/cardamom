@@ -43,7 +43,11 @@ export const useRecipes = () => {
   }, []);
 
   const saveRecipe = useCallback((recipeData) => {
-    if (!deviceId) return null;
+    console.log('💾 saveRecipe called with deviceId:', deviceId);
+    if (!deviceId) {
+      console.log('❌ No deviceId, cannot save recipe');
+      return null;
+    }
 
     const recipeId = 'recipe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const recipeName = recipeData.recipeName || recipeData.scrapedTitle || 'Untitled Recipe';
@@ -63,9 +67,11 @@ export const useRecipes = () => {
       updatedRecipes.splice(50);
     }
 
+    console.log('💾 Saving recipe to localStorage:', recipeToSave);
     localStorage.setItem(`savedRecipes_${deviceId}`, JSON.stringify(updatedRecipes));
     setRecipes(updatedRecipes);
 
+    console.log('✅ Recipe saved successfully with ID:', recipeId);
     return recipeId;
   }, [deviceId, recipes]);
 

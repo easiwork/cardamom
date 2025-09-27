@@ -96,8 +96,12 @@ export const useChat = () => {
 
       if (inputType === 'recipe' || inputType === 'url') {
         // Handle recipe processing
+        console.log('🍳 Recipe/URL processing detected, calling onRecipeProcessed callback');
         if (onRecipeProcessed) {
+          console.log('✅ onRecipeProcessed callback exists, calling it');
           onRecipeProcessed(response);
+        } else {
+          console.log('❌ onRecipeProcessed callback is null/undefined');
         }
         
         // Add success message

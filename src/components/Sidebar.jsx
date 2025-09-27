@@ -30,7 +30,6 @@ const Subtitle = styled.p`
 `;
 
 const NewRecipeButton = styled.button`
-  width: 100%;
   background: #007aff;
   border: none;
   color: white;

@@ -1446,6 +1446,7 @@
       }
 
       async function processUserMessage(message) {
+        console.log("🔍 [DEBUG] processUserMessage called with:", message);
         isProcessing = true;
         updateSendButton();
 
@@ -1453,11 +1454,21 @@
 
         try {
           const inputType = detectInputType(message);
+          console.log("🔍 [DEBUG] Input type detected:", inputType);
 
           let response;
           if (inputType === "url") {
-            response = await fetch(
-              `/api/process-url/${encodeURIComponent(message)}`
+            const encodedUrl = encodeURIComponent(message);
+            const apiUrl = `/api/process-url/${encodedUrl}`;
+            console.log("🔍 [DEBUG] Making URL request to:", apiUrl);
+            console.log("🔍 [DEBUG] Original URL:", message);
+            console.log("🔍 [DEBUG] Encoded URL:", encodedUrl);
+
+            response = await fetch(apiUrl);
+            console.log("🔍 [DEBUG] URL response status:", response.status);
+            console.log(
+              "🔍 [DEBUG] URL response headers:",
+              Object.fromEntries(response.headers.entries())
             );
           } else if (inputType === "recipe") {
             response = await fetch("/api/process-recipe", {
@@ -1467,6 +1478,7 @@
             });
           } else {
             // Handle general chat
+            console.log("🔍 [DEBUG] Making chat request");
             response = await fetch("/api/chat", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1475,26 +1487,49 @@
                 conversationHistory: conversationHistory.slice(0, -1), // Exclude the current message
               }),
             });
+            console.log("🔍 [DEBUG] Chat response status:", response.status);
           }
 
+          console.log("🔍 [DEBUG] Response status:", response.status);
+          console.log("🔍 [DEBUG] Response ok:", response.ok);
+
           if (!response.ok) {
+            console.log("🔍 [DEBUG] Response not ok, getting error data...");
             const errorData = await response.json();
+            console.log("🔍 [DEBUG] Error data:", errorData);
             throw new Error(errorData.error || "Failed to process message");
           }
 
+          console.log("🔍 [DEBUG] Response received, parsing JSON...");
           const result = await response.json();
+          console.log("🔍 [DEBUG] Parsed result:", result);
           removeTypingIndicator();
 
           if (inputType === "recipe" || inputType === "url") {
+            console.log("🔍 [DEBUG] Processing recipe/URL result:", result);
+            console.log("🔍 [DEBUG] Result has imageUrl:", !!result.imageUrl);
+            console.log("🔍 [DEBUG] Result imageUrl value:", result.imageUrl);
+            console.log(
+              "🔍 [DEBUG] Result has originalUrl:",
+              !!result.originalUrl
+            );
+            console.log(
+              "🔍 [DEBUG] Result originalUrl value:",
+              result.originalUrl
+            );
+
             // Save the recipe automatically
             const recipeId = saveRecipeToStorage(result);
+            console.log("🔍 [DEBUG] Recipe saved with ID:", recipeId);
             currentRecipeData = result;
             currentRecipeId = recipeId;
 
             // Display the result
+            console.log("🔍 [DEBUG] Displaying recipe result");
             displayRecipeResult(result);
 
             // Update recipe cards
+            console.log("🔍 [DEBUG] Updating recipe cards");
             updateRecipeCards();
           } else {
             // Handle general chat response
@@ -1722,7 +1757,11 @@
       }
 
       function saveRecipeToStorage(recipeData) {
-        if (!deviceId) return null;
+        console.log("🔍 [DEBUG] saveRecipeToStorage called with:", recipeData);
+        if (!deviceId) {
+          console.log("🔍 [DEBUG] No deviceId, returning null");
+          return null;
+        }
 
         const recipeId =
           "recipe_" +
@@ -1731,6 +1770,14 @@
           Math.random().toString(36).substr(2, 9);
         const recipeName =
           recipeData.recipeName || recipeData.scrapedTitle || "Untitled Recipe";
+
+        console.log("🔍 [DEBUG] Recipe ID:", recipeId);
+        console.log("🔍 [DEBUG] Recipe name:", recipeName);
+        console.log("🔍 [DEBUG] Recipe data imageUrl:", recipeData.imageUrl);
+        console.log(
+          "🔍 [DEBUG] Recipe data originalUrl:",
+          recipeData.originalUrl
+        );
 
         const recipeToSave = {
           id: recipeId,
@@ -1766,14 +1813,26 @@
       }
 
       function updateRecipeCards() {
+        console.log("🔍 [DEBUG] updateRecipeCards called");
         const recipeCardsList = document.getElementById("recipeCardsList");
         const savedRecipes = getSavedRecipes();
+        console.log("🔍 [DEBUG] Found", savedRecipes.length, "saved recipes");
 
         if (savedRecipes.length === 0) {
           recipeCardsList.innerHTML =
             '<p style="color: #86868b; font-size: 0.9em; text-align: center; padding: 20px;">No recipes yet. Start by sharing a recipe!</p>';
           return;
         }
+
+        console.log(
+          "🔍 [DEBUG] Saved recipes:",
+          savedRecipes.map((r) => ({
+            id: r.id,
+            name: r.name,
+            imageUrl: r.data.imageUrl,
+            originalUrl: r.data.originalUrl,
+          }))
+        );
 
         recipeCardsList.innerHTML = savedRecipes
           .map(
@@ -1824,22 +1883,33 @@
       }
 
       function loadRecipe(recipeId) {
+        console.log("🔍 [DEBUG] loadRecipe called with ID:", recipeId);
         const savedRecipes = getSavedRecipes();
         const recipe = savedRecipes.find((r) => r.id === recipeId);
 
         if (!recipe) {
+          console.log("🔍 [DEBUG] Recipe not found for ID:", recipeId);
           showToast("Recipe not found", "error");
           return;
         }
+
+        console.log("🔍 [DEBUG] Found recipe:", recipe);
+        console.log("🔍 [DEBUG] Recipe data imageUrl:", recipe.data.imageUrl);
+        console.log(
+          "🔍 [DEBUG] Recipe data originalUrl:",
+          recipe.data.originalUrl
+        );
 
         // Set current recipe
         currentRecipeData = recipe.data;
         currentRecipeId = recipeId;
 
         // Show expanded recipe view with flip animation
+        console.log("🔍 [DEBUG] Showing expanded recipe view");
         showExpandedRecipeViewWithFlip(recipe.data);
 
         // Add ingredients and steps to chat
+        console.log("🔍 [DEBUG] Adding recipe to chat");
         addRecipeToChat(recipe.data);
 
         // Update active card
@@ -1847,6 +1917,10 @@
       }
 
       function showExpandedRecipeViewWithFlip(recipeData) {
+        console.log(
+          "🔍 [DEBUG] showExpandedRecipeViewWithFlip called with:",
+          recipeData
+        );
         const expandedView = document.getElementById("expandedRecipeView");
         const contentContainer = document.getElementById(
           "recipeContentContainer"
@@ -1864,18 +1938,41 @@
 
         // Show the main image on the front of the card
         if (recipeData.imageUrl) {
-          console.log("Setting main image imageUrl:", recipeData.imageUrl);
+          console.log(
+            "🔍 [DEBUG] Setting main image imageUrl:",
+            recipeData.imageUrl
+          );
+          console.log("🔍 [DEBUG] Image URL type:", typeof recipeData.imageUrl);
+          console.log(
+            "🔍 [DEBUG] Image URL starts with /:",
+            recipeData.imageUrl.startsWith("/")
+          );
+          console.log(
+            "🔍 [DEBUG] Image URL starts with http:",
+            recipeData.imageUrl.startsWith("http")
+          );
+
           mainImage.src = recipeData.imageUrl;
           mainImage.alt =
             recipeData.recipeName || recipeData.scrapedTitle || "Recipe";
           mainImage.onerror = function () {
-            console.error("Failed to load main recipe image:", this.src);
+            console.error(
+              "🔍 [DEBUG] Failed to load main recipe image:",
+              this.src
+            );
+            console.error("🔍 [DEBUG] Image error details:", {
+              src: this.src,
+              alt: this.alt,
+              naturalWidth: this.naturalWidth,
+              naturalHeight: this.naturalHeight,
+            });
             this.style.display = "none";
             imagePlaceholder.style.display = "block";
           };
           mainImage.style.display = "block";
           imagePlaceholder.style.display = "none";
         } else {
+          console.log("🔍 [DEBUG] No imageUrl provided, showing placeholder");
           mainImage.style.display = "none";
           imagePlaceholder.style.display = "block";
         }
@@ -1890,6 +1987,7 @@
       }
 
       function prepareRecipeDetails(recipeData) {
+        console.log("🔍 [DEBUG] prepareRecipeDetails called with:", recipeData);
         const titleElement = document.getElementById("expandedRecipeTitle");
         const metaElement = document.getElementById("expandedRecipeMeta");
         const ingredientsElement = document.getElementById("ingredientList");
@@ -1898,13 +1996,32 @@
 
         // Update recipe photo
         if (recipeData.imageUrl) {
-          console.log("Setting recipe photo imageUrl:", recipeData.imageUrl);
+          console.log(
+            "🔍 [DEBUG] Setting recipe photo imageUrl:",
+            recipeData.imageUrl
+          );
+          console.log(
+            "🔍 [DEBUG] Recipe photo URL type:",
+            typeof recipeData.imageUrl
+          );
+          console.log(
+            "🔍 [DEBUG] Recipe photo URL starts with /:",
+            recipeData.imageUrl.startsWith("/")
+          );
+          console.log(
+            "🔍 [DEBUG] Recipe photo URL starts with http:",
+            recipeData.imageUrl.startsWith("http")
+          );
+
           recipePhotoElement.innerHTML = `<img src="${
             recipeData.imageUrl
           }" alt="${
             recipeData.recipeName || recipeData.scrapedTitle || "Recipe"
-          }" onerror="console.error('Failed to load recipe image:', this.src); this.style.display='none'; this.parentElement.innerHTML='🍳';" />`;
+          }" onerror="console.error('🔍 [DEBUG] Failed to load recipe image:', this.src); this.style.display='none'; this.parentElement.innerHTML='🍳';" />`;
         } else {
+          console.log(
+            "🔍 [DEBUG] No imageUrl for recipe photo, showing placeholder"
+          );
           recipePhotoElement.innerHTML = "🍳";
         }
 
@@ -2217,8 +2334,19 @@ Instructions:
         }
       };
 
+      // Global error handler
+      window.addEventListener("error", function (e) {
+        console.error("🔍 [DEBUG] Global error caught:", e.error);
+        console.error("🔍 [DEBUG] Error message:", e.message);
+        console.error("🔍 [DEBUG] Error filename:", e.filename);
+        console.error("🔍 [DEBUG] Error lineno:", e.lineno);
+        console.error("🔍 [DEBUG] Error colno:", e.colno);
+        console.error("🔍 [DEBUG] Error stack:", e.error?.stack);
+      });
+
       // Initialize the application
       document.addEventListener("DOMContentLoaded", function () {
+        console.log("🔍 [DEBUG] DOM Content Loaded, initializing application");
         initializeStorage();
         setupChatInput();
         processUrlPath();

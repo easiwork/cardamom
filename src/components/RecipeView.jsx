@@ -339,6 +339,11 @@ const EditButton = styled.button`
     transform: scale(1.05);
   }
 
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   @media (max-width: 768px) {
     top: 12px;
     right: 12px;
@@ -347,90 +352,73 @@ const EditButton = styled.button`
   }
 `;
 
-const EditModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
+const RegenerationIndicator = styled.div`
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(52, 199, 89, 0.1);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  color: #34c759;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-`;
+  gap: 4px;
+  z-index: 10;
+  animation: pulse 2s infinite;
 
-const EditModalContent = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-`;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
 
-const EditModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const EditModalTitle = styled.h3`
-  margin: 0;
-  font-size: 1.2em;
-  font-weight: 600;
-  color: #1d1d1f;
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #86868b;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #f5f5f7;
-    color: #1d1d1f;
+  @media (max-width: 768px) {
+    top: 12px;
+    left: 12px;
+    padding: 4px 6px;
+    font-size: 11px;
   }
 `;
 
-const EditTextarea = styled.textarea`
+const InlineEditTextarea = styled.textarea`
   width: 100%;
+  height: 100%;
   min-height: 300px;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid #e5e5e7;
   border-radius: 8px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-  resize: vertical;
-  margin-bottom: 20px;
+  resize: none;
+  margin-bottom: 16px;
+  background: #f9f9f9;
+  flex: 1;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
     border-color: #007aff;
     box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+    background: white;
   }
 `;
 
-const EditModalActions = styled.div`
+
+const InlineEditActions = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: flex-end;
+  margin-bottom: 16px;
+  flex-shrink: 0;
 `;
 
-const ModalButton = styled.button`
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
+const InlineEditButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -459,6 +447,7 @@ const ModalButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
 
 const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
   const [flipped, setFlipped] = useState(false);
@@ -534,11 +523,26 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
     }
   };
 
-  // Convert recipe to markdown format
+  // Convert recipe to markdown format with YAML frontmatter
   const recipeToMarkdown = (recipe) => {
     if (!recipe) return '';
     
-    let markdown = `# ${recipe.recipeName || recipe.scrapedTitle || 'Recipe'}\n\n`;
+    // Create YAML frontmatter
+    const frontmatter = {
+      title: recipe.recipeName || recipe.scrapedTitle || 'Recipe',
+      created: new Date().toLocaleDateString(),
+      ingredients_count: recipe.ingredients?.length || 0,
+      steps_count: recipe.actions?.length || 0,
+      ...(recipe.originalUrl && { source: recipe.originalUrl })
+    };
+    
+    // Convert frontmatter to YAML string
+    const yamlFrontmatter = Object.entries(frontmatter)
+      .map(([key, value]) => `${key}: ${typeof value === 'string' ? `"${value}"` : value}`)
+      .join('\n');
+    
+    let markdown = `---\n${yamlFrontmatter}\n---\n\n`;
+    markdown += `# ${frontmatter.title}\n\n`;
     
     if (recipe.ingredients && recipe.ingredients.length > 0) {
       markdown += `## Ingredients\n\n`;
@@ -551,9 +555,16 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
     if (recipe.actions && recipe.actions.length > 0) {
       markdown += `## Instructions\n\n`;
       recipe.actions.forEach((action, index) => {
-        markdown += `${index + 1}. ${action.action}`;
-        if (action.time) {
-          markdown += ` (${action.time})`;
+        // Debug: log the action structure
+        console.log('Action structure:', action);
+        
+        // Handle different possible action structures
+        const actionText = action.action || action.step || action.description || action;
+        const timeText = action.time || action.duration;
+        
+        markdown += `${index + 1}. ${actionText}`;
+        if (timeText) {
+          markdown += ` (${timeText})`;
         }
         markdown += '\n';
       });
@@ -683,9 +694,16 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
             overflowY: 'auto',
             position: 'relative'
           }}>
-            <EditButton onClick={handleEditClick}>
-              ✏️ Edit
-            </EditButton>
+            {isRegenerating && (
+              <RegenerationIndicator>
+                🔄 Regenerating...
+              </RegenerationIndicator>
+            )}
+            {!isEditing ? (
+              <>
+                <EditButton onClick={handleEditClick} disabled={isRegenerating}>
+                  ✏️ Edit
+                </EditButton>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
               {/* Recipe photo */}
               <div style={{
@@ -787,6 +805,34 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
                 )}
               </div>
             </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <h3 style={{ marginBottom: '16px', color: '#1d1d1f', fontSize: '1.1em' }}>Edit Recipe</h3>
+                  
+                  <InlineEditTextarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    placeholder="Edit your recipe in markdown format with YAML frontmatter..."
+                    style={{ minHeight: '200px', flex: '1' }}
+                  />
+                  
+                  <InlineEditActions>
+                    <InlineEditButton className="cancel" onClick={handleCancelEdit}>
+                      Cancel
+                    </InlineEditButton>
+                    <InlineEditButton 
+                      className="save" 
+                      onClick={handleSaveEdit}
+                      disabled={isRegenerating || !editText.trim()}
+                    >
+                      {isRegenerating ? 'Regenerating...' : 'Save & Regenerate'}
+                    </InlineEditButton>
+                  </InlineEditActions>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Flowchart */}
@@ -827,15 +873,6 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
           </div>
         </div>
       </RecipeViewContainer>
-      
-      <EditModalComponent
-        isOpen={isEditing}
-        onClose={handleCancelEdit}
-        editText={editText}
-        setEditText={setEditText}
-        onSave={handleSaveEdit}
-        isRegenerating={isRegenerating}
-      />
     </>
     );
   }
@@ -856,54 +893,88 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
 
         {/* Back of card - shows recipe details and flowchart */}
         <RecipeCardBack>
+          {isRegenerating && (
+            <RegenerationIndicator>
+              🔄 Regenerating...
+            </RegenerationIndicator>
+          )}
           <RecipeDetailsPanel>
-              <EditButton onClick={handleEditClick}>
-                ✏️ Edit
-              </EditButton>
-            <div>
-              <RecipePhoto>
-                {currentRecipe.imageUrl ? (
-                  <img src={currentRecipe.imageUrl} alt={currentRecipe.recipeName || currentRecipe.scrapedTitle || 'Recipe'} />
-                ) : (
-                  '🍳'
-                )}
-              </RecipePhoto>
-              <RecipeTitle>
-                {currentRecipe.recipeName || currentRecipe.scrapedTitle || 'Recipe'}
-              </RecipeTitle>
-              <RecipeMeta>
-                <div>{currentRecipe.ingredients?.length || 0} ingredients</div>
-                <div>{currentRecipe.actions?.length || 0} steps</div>
-                <div>{new Date().toLocaleDateString()}</div>
-                {currentRecipe.originalUrl && (
-                  <div>
-                    <a 
-                      href={currentRecipe.originalUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      style={{ color: '#007aff', textDecoration: 'none' }}
-                    >
-                      🌐 Original Recipe
-                    </a>
-                  </div>
-                )}
-              </RecipeMeta>
-            </div>
+            {!isEditing ? (
+              <>
+                <EditButton onClick={handleEditClick} disabled={isRegenerating}>
+                  ✏️ Edit
+                </EditButton>
+                <div>
+                  <RecipePhoto>
+                    {currentRecipe.imageUrl ? (
+                      <img src={currentRecipe.imageUrl} alt={currentRecipe.recipeName || currentRecipe.scrapedTitle || 'Recipe'} />
+                    ) : (
+                      '🍳'
+                    )}
+                  </RecipePhoto>
+                  <RecipeTitle>
+                    {currentRecipe.recipeName || currentRecipe.scrapedTitle || 'Recipe'}
+                  </RecipeTitle>
+                  <RecipeMeta>
+                    <div>{currentRecipe.ingredients?.length || 0} ingredients</div>
+                    <div>{currentRecipe.actions?.length || 0} steps</div>
+                    <div>{new Date().toLocaleDateString()}</div>
+                    {currentRecipe.originalUrl && (
+                      <div>
+                        <a 
+                          href={currentRecipe.originalUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: '#007aff', textDecoration: 'none' }}
+                        >
+                          🌐 Original Recipe
+                        </a>
+                      </div>
+                    )}
+                  </RecipeMeta>
+                </div>
 
-            <IngredientsSection>
-              <SectionTitle>Ingredients</SectionTitle>
-              <IngredientList>
-                {currentRecipe.ingredients && currentRecipe.ingredients.length > 0 ? (
-                  currentRecipe.ingredients.map((ingredient, index) => (
-                    <IngredientItem key={index}>
-                      <strong>{ingredient.quantity}</strong> {ingredient.name}
-                    </IngredientItem>
-                  ))
-                ) : (
-                  <p style={{ color: '#86868b' }}>No ingredients available</p>
-                )}
-              </IngredientList>
-            </IngredientsSection>
+                <IngredientsSection>
+                  <SectionTitle>Ingredients</SectionTitle>
+                  <IngredientList>
+                    {currentRecipe.ingredients && currentRecipe.ingredients.length > 0 ? (
+                      currentRecipe.ingredients.map((ingredient, index) => (
+                        <IngredientItem key={index}>
+                          <strong>{ingredient.quantity}</strong> {ingredient.name}
+                        </IngredientItem>
+                      ))
+                    ) : (
+                      <p style={{ color: '#86868b' }}>No ingredients available</p>
+                    )}
+                  </IngredientList>
+                </IngredientsSection>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <h3 style={{ marginBottom: '16px', color: '#1d1d1f' }}>Edit Recipe</h3>
+                  
+                  <InlineEditTextarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    placeholder="Edit your recipe in markdown format with YAML frontmatter..."
+                  />
+                  
+                  <InlineEditActions>
+                    <InlineEditButton className="cancel" onClick={handleCancelEdit}>
+                      Cancel
+                    </InlineEditButton>
+                    <InlineEditButton 
+                      className="save" 
+                      onClick={handleSaveEdit}
+                      disabled={isRegenerating || !editText.trim()}
+                    >
+                      {isRegenerating ? 'Regenerating...' : 'Save & Regenerate'}
+                    </InlineEditButton>
+                  </InlineEditActions>
+                </div>
+              </>
+            )}
           </RecipeDetailsPanel>
 
           <FlowchartPanel>
@@ -918,52 +989,9 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
         </RecipeCardBack>
       </RecipeContentContainer>
     </RecipeViewContainer>
-      
-      <EditModalComponent
-        isOpen={isEditing}
-        onClose={handleCancelEdit}
-        editText={editText}
-        setEditText={setEditText}
-        onSave={handleSaveEdit}
-        isRegenerating={isRegenerating}
-      />
     </>
   );
 };
 
-// Edit Modal Component
-const EditModalComponent = ({ isOpen, onClose, editText, setEditText, onSave, isRegenerating }) => {
-  if (!isOpen) return null;
-
-  return (
-    <EditModal onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <EditModalContent>
-        <EditModalHeader>
-          <EditModalTitle>Edit Recipe</EditModalTitle>
-          <CloseButton onClick={onClose}>×</CloseButton>
-        </EditModalHeader>
-        
-        <EditTextarea
-          value={editText}
-          onChange={(e) => setEditText(e.target.value)}
-          placeholder="Edit your recipe in markdown format..."
-        />
-        
-        <EditModalActions>
-          <ModalButton className="cancel" onClick={onClose}>
-            Cancel
-          </ModalButton>
-          <ModalButton 
-            className="save" 
-            onClick={onSave}
-            disabled={isRegenerating || !editText.trim()}
-          >
-            {isRegenerating ? 'Regenerating...' : 'Save & Regenerate'}
-          </ModalButton>
-        </EditModalActions>
-      </EditModalContent>
-    </EditModal>
-  );
-};
 
 export default RecipeView;

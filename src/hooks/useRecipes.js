@@ -213,6 +213,38 @@ export const useRecipes = () => {
     }
   }, [recipes]);
 
+  const updateRecipe = useCallback((recipeId, updatedRecipeData) => {
+    if (!deviceId) return false;
+
+    console.log('🔄 Updating recipe with ID:', recipeId);
+    console.log('📝 Updated recipe data:', updatedRecipeData);
+
+    const updatedRecipes = recipes.map(recipe => {
+      if (recipe.id === recipeId) {
+        const updatedRecipe = {
+          ...recipe,
+          data: updatedRecipeData,
+          name: updatedRecipeData.recipeName || updatedRecipeData.scrapedTitle || recipe.name,
+          updatedAt: new Date().toISOString()
+        };
+        console.log('✅ Recipe updated:', updatedRecipe);
+        return updatedRecipe;
+      }
+      return recipe;
+    });
+
+    localStorage.setItem(`savedRecipes_${deviceId}`, JSON.stringify(updatedRecipes));
+    setRecipes(updatedRecipes);
+
+    // If this is the currently loaded recipe, update it
+    if (currentRecipeId === recipeId) {
+      setCurrentRecipe(updatedRecipeData);
+    }
+
+    console.log('💾 Recipe update saved to localStorage');
+    return true;
+  }, [deviceId, recipes, currentRecipeId]);
+
   const deleteRecipe = useCallback((recipeId) => {
     if (!deviceId) return;
 
@@ -238,6 +270,7 @@ export const useRecipes = () => {
     deviceId,
     saveRecipe,
     loadRecipe,
+    updateRecipe,
     deleteRecipe,
     clearCurrentRecipe,
   };

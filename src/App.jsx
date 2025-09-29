@@ -90,6 +90,7 @@ function App() {
     deviceId,
     saveRecipe, 
     loadRecipe, 
+    updateRecipe,
     deleteRecipe, 
     clearCurrentRecipe 
   } = useRecipes();
@@ -172,14 +173,15 @@ function App() {
   const handleUpdateRecipe = async (markdownText) => {
     // Process the markdown text as a new recipe through the API
     try {
+      console.log('🔄 Updating recipe with ID:', currentRecipeId);
+      
       const response = await fetch('/api/process-recipe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: markdownText,
-          deviceId: deviceId
+          recipeText: markdownText,
         }),
       });
 
@@ -188,9 +190,19 @@ function App() {
       }
 
       const recipeData = await response.json();
-      const recipeId = saveRecipe(recipeData);
-      if (recipeId) {
-        loadRecipe(recipeId);
+      
+      // Update the existing recipe instead of creating a new one
+      if (currentRecipeId) {
+        const success = updateRecipe(currentRecipeId, recipeData);
+        if (success) {
+          console.log('✅ Recipe updated successfully');
+        } else {
+          console.error('❌ Failed to update recipe');
+          throw new Error('Failed to update recipe in storage');
+        }
+      } else {
+        console.error('❌ No current recipe ID to update');
+        throw new Error('No recipe selected for update');
       }
     } catch (error) {
       console.error('Error updating recipe:', error);

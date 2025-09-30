@@ -26,6 +26,7 @@ const RecipeContentContainer = styled.div`
   transform-style: preserve-3d;
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${props => props.flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'};
+  overflow: visible;
   
   @media (max-width: 768px) {
     height: auto;
@@ -69,7 +70,7 @@ const RecipeCardBack = styled.div`
   backface-visibility: hidden;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: visible;
   background: #ffffff;
   transform: rotateY(180deg);
   display: flex;
@@ -198,25 +199,30 @@ const FlowchartContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 0; /* Allow flex item to shrink */
 
   svg {
     background: white;
     border-radius: 0;
     box-shadow: none;
     width: 100%;
-    height: 100%;
-    min-height: 100%;
+    height: auto;
+    max-width: 100%;
+    display: block;
   }
 `;
 
 const FlowchartContent = styled.div`
   width: 100%;
-  height: 100%;
+  min-height: 0; /* Allow flex item to shrink */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   flex: 1;
+  overflow: auto;
+  padding: 16px;
+  box-sizing: border-box;
 `;
 
 const PlaceholderText = styled.div`
@@ -505,12 +511,41 @@ const RecipeView = ({ currentRecipe, onClearRecipe, onUpdateRecipe }) => {
       
       flowchartElement.innerHTML = svg;
       
-      // Ensure the SVG takes full width
+      // Ensure the SVG is properly sized and responsive
       const svgElement = flowchartElement.querySelector('svg');
       if (svgElement) {
+        // Set responsive attributes
+        svgElement.setAttribute('width', '100%');
+        svgElement.setAttribute('height', 'auto');
+        svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        
+        // Set responsive styling
         svgElement.style.width = '100%';
         svgElement.style.height = 'auto';
         svgElement.style.maxWidth = '100%';
+        svgElement.style.display = 'block';
+        svgElement.style.overflow = 'visible';
+        
+        // Ensure the SVG has a proper viewBox if it doesn't have one
+        if (!svgElement.getAttribute('viewBox')) {
+          const width = svgElement.getAttribute('width') || '800';
+          const height = svgElement.getAttribute('height') || '600';
+          svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        }
+        
+        // Add a wrapper div for better control
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          width: 100%;
+          overflow: auto;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+        `;
+        
+        // Move the SVG into the wrapper
+        svgElement.parentNode.insertBefore(wrapper, svgElement);
+        wrapper.appendChild(svgElement);
       }
     } catch (error) {
       console.error('Mermaid rendering error:', error);

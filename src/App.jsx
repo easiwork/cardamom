@@ -83,16 +83,17 @@ const SidebarOverlay = styled.div`
 function App() {
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [placeholderRecipe, setPlaceholderRecipe] = useState(null);
   const { 
     recipes, 
     currentRecipe, 
     currentRecipeId, 
     deviceId,
-    saveRecipe, 
-    loadRecipe, 
+    saveRecipe,
+    loadRecipe,
     updateRecipe,
-    deleteRecipe, 
-    clearCurrentRecipe 
+    deleteRecipe,
+    clearCurrentRecipe
   } = useRecipes();
   
   const { 
@@ -110,6 +111,20 @@ function App() {
     if (recipeId) {
       loadRecipe(recipeId);
       console.log('📖 Recipe loaded:', recipeId);
+      // Clear the placeholder recipe since we now have a real recipe
+      setPlaceholderRecipe(null);
+    }
+  };
+
+  const handleSaveRecipeFromChat = (recipeData) => {
+    console.log('💾 handleSaveRecipeFromChat called with:', recipeData);
+    const recipeId = saveRecipe(recipeData);
+    console.log('💾 Recipe saved from chat with ID:', recipeId);
+    if (recipeId) {
+      loadRecipe(recipeId);
+      console.log('📖 Recipe loaded from chat:', recipeId);
+      // Clear the placeholder recipe since we now have a real recipe
+      setPlaceholderRecipe(null);
     }
   };
 
@@ -151,11 +166,36 @@ function App() {
   const handleNewChat = () => {
     clearMessages();
     clearCurrentRecipe();
+    
+    // Create a placeholder recipe
+    const placeholder = {
+      id: 'placeholder_' + Date.now(),
+      name: 'New Recipe...',
+      data: {
+        recipeName: 'New Recipe...',
+        ingredients: [],
+        actions: [],
+        mermaidDiagram: '',
+        imageUrl: null,
+        isPlaceholder: true
+      },
+      timestamp: new Date().toISOString(),
+      deviceId: deviceId,
+      isPlaceholder: true
+    };
+    
+    setPlaceholderRecipe(placeholder);
     setChatDrawerOpen(true);
   };
 
   const toggleChatDrawer = () => {
-    setChatDrawerOpen(!chatDrawerOpen);
+    const newState = !chatDrawerOpen;
+    setChatDrawerOpen(newState);
+    
+    // If closing the chat drawer and we have a placeholder, clear it
+    if (!newState && placeholderRecipe) {
+      setPlaceholderRecipe(null);
+    }
   };
 
   const toggleSidebar = () => {
@@ -220,7 +260,7 @@ function App() {
         <SidebarOverlay show={sidebarOpen} onClick={closeSidebar} />
         <MainContent chatDrawerOpen={chatDrawerOpen}>
           <Sidebar
-            recipes={recipes}
+            recipes={placeholderRecipe ? [placeholderRecipe, ...recipes] : recipes}
             currentRecipeId={currentRecipeId}
             onNewRecipe={handleNewChat}
             onLoadRecipe={loadRecipe}
@@ -244,6 +284,7 @@ function App() {
             isProcessing={isProcessing}
             onSendMessage={handleSendMessage}
             onNewChat={handleNewChat}
+            onSaveRecipe={handleSaveRecipeFromChat}
           />
         </MainContent>
       </MacWindow>

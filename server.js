@@ -237,12 +237,75 @@ async function generateRecipeImage(recipeData) {
   }
 }
 
-// Recipe processing function
-async function processRecipeToFlowchart(recipeText) {
-  console.log("🍳 Starting recipe processing...");
-  console.log(`📝 Recipe text length: ${recipeText.length} characters`);
-  console.log(`📝 Recipe preview: ${recipeText.substring(0, 200)}...`);
+// Mermaid error analyzer function
+function analyzeMermaidError(error, mermaidCode) {
+  const errorMessage = error.message || error.toString();
+  const suggestions = [];
+  
+  console.log("🔍 Analyzing Mermaid error:", errorMessage);
+  console.log("📝 Problematic code:", mermaidCode);
+  
+  // Common error patterns and fixes
+  if (errorMessage.includes("Parse error") || errorMessage.includes("syntax error")) {
+    suggestions.push("Fix syntax errors in the diagram");
+    
+    // Check for common syntax issues
+    if (mermaidCode.includes("  ") || mermaidCode.includes("\t")) {
+      suggestions.push("Remove extra spaces or tabs - use single spaces only");
+    }
+    
+    if (mermaidCode.includes("--") && !mermaidCode.includes("-->")) {
+      suggestions.push("Use '-->' for connections, not '--'");
+    }
+    
+    if (mermaidCode.includes(":::") || mermaidCode.includes("classDef") && mermaidCode.indexOf("classDef") < mermaidCode.indexOf("class ")) {
+      suggestions.push("Move all classDef statements to the end, after all node definitions and connections");
+    }
+  }
+  
+  if (errorMessage.includes("node") && errorMessage.includes("not found")) {
+    suggestions.push("Ensure all node IDs referenced in connections are defined");
+    suggestions.push("Check for typos in node IDs");
+  }
+  
+  if (errorMessage.includes("class") && errorMessage.includes("not defined")) {
+    suggestions.push("Define all classes with classDef before using them");
+    suggestions.push("Use only the predefined classes: ingredient, action, final");
+  }
+  
+  if (mermaidCode.includes(" ") && /[A-Z]/.test(mermaidCode)) {
+    suggestions.push("Replace spaces in node IDs with underscores");
+    suggestions.push("Use only lowercase letters and underscores for node IDs");
+  }
+  
+  if (mermaidCode.includes("-") && !mermaidCode.includes("-->")) {
+    suggestions.push("Replace hyphens in node IDs with underscores");
+  }
+  
+  // Check for missing required elements
+  if (!mermaidCode.includes("graph TD")) {
+    suggestions.push("Start the diagram with 'graph TD;'");
+  }
+  
+  if (!mermaidCode.includes("classDef")) {
+    suggestions.push("Add classDef statements for styling");
+  }
+  
+  if (!mermaidCode.includes("class ")) {
+    suggestions.push("Add class statements to apply styles to nodes");
+  }
+  
+  return {
+    error: errorMessage,
+    suggestions: suggestions,
+    problematicCode: mermaidCode
+  };
+}
 
+// Enhanced Mermaid generation with retry logic
+async function generateMermaidWithRetry(recipeText, ingredients, actions, attempt = 1, maxAttempts = 3) {
+  console.log(`🔄 Mermaid generation attempt ${attempt}/${maxAttempts}`);
+  
   const systemPrompt = `You are a culinary expert who transforms recipes into structured flowcharts. 
 
 Your task is to analyze a recipe and create a Mermaid flowchart that shows:
@@ -264,16 +327,34 @@ Rules for the flowchart:
 - The final product is also an ingredient node
 - IMPORTANT: Always include ingredient quantities in both the ingredient nodes and the structured data
 
-IMPORTANT MERMAID SYNTAX REQUIREMENTS:
-- Use simple node IDs without spaces or special characters (e.g., oil, toast_chilies, chili_oil)
-- Apply styling using classDef at the end, not inline with ::: syntax
-- Use this exact format:
-  classDef ingredient fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
-  classDef action fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-  classDef final fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
-- Apply classes using: class nodeId1,nodeId2,nodeId3 ingredient
-- Keep node names simple and descriptive
-- Ensure all node references are consistent throughout the diagram
+CRITICAL MERMAID SYNTAX REQUIREMENTS (MUST FOLLOW EXACTLY):
+1. Start with: graph TD;
+2. Use simple node IDs without spaces, special characters, or hyphens (use underscores instead)
+3. Node definitions format: nodeId["Node Label"] or nodeId(("Node Label"))
+4. Connections format: nodeId1 --> nodeId2
+5. Styling MUST be at the end using classDef and class statements
+6. classDef format: classDef className fill:#color,stroke:#color,stroke-width:2px,color:#color
+7. class application format: class nodeId1,nodeId2,nodeId3 className
+
+MANDATORY STRUCTURE (EXACT ORDER):
+- graph TD;
+- [All node definitions]
+- [All connections]
+- classDef ingredient fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+- classDef action fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+- classDef final fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+- class [nodeIds] ingredient
+- class [nodeIds] action
+- class [nodeIds] final
+
+VALIDATION CHECKLIST (VERIFY BEFORE SUBMITTING):
+✓ All node IDs are simple (no spaces, hyphens, or special chars)
+✓ All node references in connections exist
+✓ classDef statements come after all node definitions
+✓ class statements come after classDef statements
+✓ No syntax errors or malformed brackets/parentheses
+✓ Each line ends with semicolon or newline
+✓ No extra spaces or tabs
 
 Create a clear, logical flow that shows the transformation of ingredients through cooking steps.`;
 
@@ -287,7 +368,13 @@ Return the response in the exact JSON schema format with:
 3. All actions with IDs, names, descriptions, durations, input/output ingredients
 4. A complete Mermaid flowchart diagram
 
-Focus on the logical flow and timing of the cooking process. Make sure to extract and include the exact quantities for each ingredient as specified in the recipe.`;
+Focus on the logical flow and timing of the cooking process. Make sure to extract and include the exact quantities for each ingredient as specified in the recipe.
+
+${attempt > 1 ? `\n\nIMPORTANT: This is attempt ${attempt}. The previous attempt failed with the following issues:
+${ingredients && ingredients.length > 0 ? `Previous ingredients: ${JSON.stringify(ingredients, null, 2)}` : ''}
+${actions && actions.length > 0 ? `Previous actions: ${JSON.stringify(actions, null, 2)}` : ''}
+
+Please fix the Mermaid diagram syntax issues and ensure it follows the exact requirements above.` : ''}`;
 
   try {
     console.log("🤖 Sending request to OpenAI API...");
@@ -307,7 +394,7 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
           strict: true,
         },
       },
-      temperature: 0.3,
+      temperature: attempt === 1 ? 0.3 : 0.1, // Lower temperature for retries
     });
 
     const apiResponseTime = Date.now() - startTime;
@@ -317,6 +404,88 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
     );
 
     const result = JSON.parse(completion.choices[0].message.content);
+    
+    // Validate Mermaid syntax
+    if (result.mermaidDiagram) {
+      console.log("🔍 Validating Mermaid syntax...");
+      try {
+        // Basic syntax validation
+        const mermaidCode = result.mermaidDiagram.trim();
+        
+        // Check for required elements
+        if (!mermaidCode.startsWith('graph TD')) {
+          throw new Error("Diagram must start with 'graph TD'");
+        }
+        
+        if (!mermaidCode.includes('classDef')) {
+          throw new Error("Missing classDef statements");
+        }
+        
+        if (!mermaidCode.includes('class ')) {
+          throw new Error("Missing class statements");
+        }
+        
+        // Check for common syntax issues
+        const lines = mermaidCode.split('\n');
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine && !trimmedLine.endsWith(';') && !trimmedLine.includes('-->') && !trimmedLine.includes('classDef') && !trimmedLine.includes('class ')) {
+            console.warn(`⚠️ Line may be missing semicolon: ${trimmedLine}`);
+          }
+        }
+        
+        console.log("✅ Mermaid syntax validation passed");
+        return result;
+        
+      } catch (validationError) {
+        console.error("❌ Mermaid validation failed:", validationError.message);
+        
+        if (attempt < maxAttempts) {
+          console.log(`🔄 Retrying with validation error feedback...`);
+          const errorAnalysis = analyzeMermaidError(validationError, result.mermaidDiagram);
+          return await generateMermaidWithRetry(
+            recipeText, 
+            result.ingredients, 
+            result.actions, 
+            attempt + 1, 
+            maxAttempts
+          );
+        } else {
+          throw new Error(`Mermaid validation failed after ${maxAttempts} attempts: ${validationError.message}`);
+        }
+      }
+    }
+    
+    return result;
+    
+  } catch (error) {
+    console.error(`❌ OpenAI API Error (attempt ${attempt}):`, error);
+    
+    if (attempt < maxAttempts) {
+      console.log(`🔄 Retrying due to API error...`);
+      return await generateMermaidWithRetry(
+        recipeText, 
+        ingredients, 
+        actions, 
+        attempt + 1, 
+        maxAttempts
+      );
+    } else {
+      throw new Error(`Failed to process recipe with OpenAI after ${maxAttempts} attempts: ${error.message}`);
+    }
+  }
+}
+
+// Recipe processing function
+async function processRecipeToFlowchart(recipeText) {
+  console.log("🍳 Starting recipe processing...");
+  console.log(`📝 Recipe text length: ${recipeText.length} characters`);
+  console.log(`📝 Recipe preview: ${recipeText.substring(0, 200)}...`);
+
+  try {
+    // Use the enhanced Mermaid generation with retry logic
+    const result = await generateMermaidWithRetry(recipeText);
+    
     console.log("📋 Parsed result structure:");
     console.log(`  - Recipe name: "${result.recipeName || "Not provided"}"`);
     console.log(`  - Ingredients: ${result.ingredients?.length || 0} items`);
@@ -377,13 +546,13 @@ Focus on the logical flow and timing of the cooking process. Make sure to extrac
 
     return result;
   } catch (error) {
-    console.error("❌ OpenAI API Error:", error);
+    console.error("❌ Recipe processing failed:", error);
     console.error("Error details:", {
       message: error.message,
       status: error.status,
       code: error.code,
     });
-    throw new Error("Failed to process recipe with OpenAI");
+    throw new Error(`Failed to process recipe: ${error.message}`);
   }
 }
 

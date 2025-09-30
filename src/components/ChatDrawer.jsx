@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import ReactMarkdown from 'react-markdown';
 
 const slideIn = keyframes`
   from {
@@ -140,15 +141,100 @@ const MessageText = styled.div`
   border-color: ${props => props.isUser ? '#007aff' : '#e5e5e7'};
   color: ${props => props.isUser ? 'white' : '#1d1d1f'};
 
-  h4 {
-    margin: 0 0 8px 0;
-    font-size: 1em;
+  /* Markdown element styles */
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 12px 0;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  h1 { font-size: 1.3em; }
+  h2 { font-size: 1.2em; }
+  h3 { font-size: 1.1em; }
+  h4 { font-size: 1em; }
+  h5 { font-size: 0.95em; }
+  h6 { font-size: 0.9em; }
+
+  p {
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  ul, ol {
+    margin: 0 0 12px 0;
+    padding-left: 20px;
+  }
+
+  li {
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  strong, b {
+    font-weight: 600;
+  }
+
+  em, i {
+    font-style: italic;
+  }
+
+  code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
   }
 
   pre {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
     white-space: pre-wrap;
-    font-family: inherit;
-    margin: 0;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+  }
+
+  blockquote {
+    border-left: 4px solid rgba(0, 0, 0, 0.2);
+    padding-left: 16px;
+    margin: 12px 0;
+    font-style: italic;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    margin: 16px 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+
+  th, td {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  th {
+    background: rgba(0, 0, 0, 0.05);
+    font-weight: 600;
   }
 `;
 
@@ -213,12 +299,12 @@ const Input = styled.textarea`
   background: #f2f2f7;
   border: 1px solid #e5e5e7;
   border-radius: 12px;
-  padding: 16px 60px 16px 20px;
+  padding: 14px 60px 14px 20px;
   color: #1d1d1f;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.5;
   resize: none;
-  min-height: 24px;
+  min-height: 72px;
   max-height: 200px;
   font-family: inherit;
   transition: all 0.2s ease;
@@ -326,7 +412,164 @@ const ExampleCard = styled.div`
   }
 `;
 
-const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, onNewChat }) => {
+const SaveRecipeButton = styled.button`
+  background: #34c759;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: white;
+  font-size: 0.85em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+
+  &:hover {
+    background: #30b04f;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #e5e5e7;
+    color: #86868b;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const MessageActions = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+`;
+
+// Utility function to detect if a message contains a recipe
+const detectRecipeInMessage = (content) => {
+  const text = content.toLowerCase();
+  
+  // Check for recipe indicators
+  const hasIngredients = text.includes('ingredients') || text.includes('ingredient');
+  const hasInstructions = text.includes('instructions') || text.includes('directions') || text.includes('steps') || text.includes('method');
+  const hasRecipeKeywords = ['cook', 'bake', 'fry', 'boil', 'mix', 'combine', 'add', 'stir', 'whisk', 'beat'].some(keyword => text.includes(keyword));
+  const hasMeasurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'gram', 'ml', 'tbsp', 'tsp'].some(unit => text.includes(unit));
+  
+  // Recipe detection criteria
+  const isRecipe = (hasIngredients && hasInstructions) || 
+                   (hasIngredients && hasRecipeKeywords && hasMeasurements) ||
+                   (hasInstructions && hasRecipeKeywords && hasMeasurements);
+  
+  return isRecipe;
+};
+
+// Utility function to extract recipe data from message content
+const extractRecipeFromMessage = (content) => {
+  try {
+    // Try to parse structured recipe data if it's in a specific format
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+    
+    let recipeName = 'Chat Recipe';
+    let ingredients = [];
+    let actions = [];
+    
+    // Extract recipe name (usually the first line or after a #)
+    const nameMatch = content.match(/^#\s*(.+)$/m) || content.match(/^(.+)$/m);
+    if (nameMatch) {
+      recipeName = nameMatch[1].trim();
+    }
+    
+    // Extract ingredients
+    const ingredientsSection = content.match(/ingredients?[:\s]*([\s\S]*?)(?=instructions?|directions?|steps?|method|$)/i);
+    if (ingredientsSection) {
+      const ingredientLines = ingredientsSection[1].split('\n')
+        .map(line => line.trim())
+        .filter(line => line && (line.startsWith('-') || line.startsWith('*') || line.match(/^\d/)));
+      
+      ingredients = ingredientLines.map(line => {
+        // Remove bullet points and numbers
+        const cleanLine = line.replace(/^[-*\d.\s]+/, '').trim();
+        // Try to extract quantity and name
+        const match = cleanLine.match(/^(.+?)\s+(.+)$/);
+        if (match) {
+          return { quantity: match[1].trim(), name: match[2].trim() };
+        }
+        return { quantity: '', name: cleanLine };
+      });
+    }
+    
+    // Extract instructions/actions
+    const instructionsSection = content.match(/(?:instructions?|directions?|steps?|method)[:\s]*([\s\S]*?)$/i);
+    if (instructionsSection) {
+      const instructionLines = instructionsSection[1].split('\n')
+        .map(line => line.trim())
+        .filter(line => line && (line.match(/^\d+\./) || line.startsWith('-') || line.startsWith('*')));
+      
+      actions = instructionLines.map((line, index) => {
+        // Remove numbering and bullet points
+        const cleanLine = line.replace(/^[-*\d.\s]+/, '').trim();
+        return { action: cleanLine, time: '5 min' }; // Default time
+      });
+    }
+    
+    // If we couldn't extract structured data, create a simple recipe
+    if (ingredients.length === 0 && actions.length === 0) {
+      // Fallback: treat the entire content as a recipe
+      const allLines = lines.filter(line => line.length > 10);
+      if (allLines.length > 0) {
+        recipeName = allLines[0];
+        // Try to identify ingredients and instructions from the text
+        const text = content.toLowerCase();
+        if (text.includes('ingredients') || text.includes('ingredient')) {
+          // This looks like a recipe, create a basic structure
+          ingredients = [{ quantity: 'As needed', name: 'See full recipe below' }];
+          actions = [{ action: 'Follow the detailed instructions in the chat message', time: 'Varies' }];
+        }
+      }
+    }
+    
+    return {
+      recipeName,
+      ingredients,
+      actions,
+      mermaidDiagram: generateSimpleMermaidDiagram(actions),
+      imageUrl: null
+    };
+  } catch (error) {
+    console.error('Error extracting recipe from message:', error);
+    return null;
+  }
+};
+
+// Generate a simple mermaid diagram from actions
+const generateSimpleMermaidDiagram = (actions) => {
+  if (!actions || actions.length === 0) {
+    return 'graph TD\n    A[Start] --> B[Follow Instructions]';
+  }
+  
+  const nodes = actions.map((action, index) => {
+    const nodeId = String.fromCharCode(65 + index); // A, B, C, etc.
+    const actionText = action.action.length > 30 ? action.action.substring(0, 30) + '...' : action.action;
+    return `${nodeId}["${actionText}"]`;
+  }).join('\n    ');
+  
+  const connections = actions.map((_, index) => {
+    if (index === 0) return '';
+    const fromNode = String.fromCharCode(65 + index - 1);
+    const toNode = String.fromCharCode(65 + index);
+    return `    ${fromNode} --> ${toNode}`;
+  }).filter(conn => conn).join('\n');
+  
+  return `graph TD\n    ${nodes}\n${connections}`;
+};
+
+const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, onNewChat, onSaveRecipe }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -369,6 +612,21 @@ const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, on
   const handleExampleClick = (message) => {
     setInputValue(message);
     handleSend();
+  };
+
+  const handleSaveRecipe = (messageContent) => {
+    if (!onSaveRecipe) {
+      console.error('onSaveRecipe callback not provided');
+      return;
+    }
+
+    const recipeData = extractRecipeFromMessage(messageContent);
+    if (recipeData) {
+      console.log('🍳 Extracted recipe data:', recipeData);
+      onSaveRecipe(recipeData);
+    } else {
+      console.error('Failed to extract recipe data from message');
+    }
   };
 
   const loadExampleRecipe = () => {
@@ -446,22 +704,32 @@ Instructions:
           </WelcomeMessage>
         )}
 
-        {messages.map((message) => (
-          <Message key={message.id} isUser={message.role === 'user'}>
-            <Avatar isUser={message.role === 'user'}>
-              {message.role === 'user' ? 'U' : 'AI'}
-            </Avatar>
-            <MessageContent isUser={message.role === 'user'}>
-              <MessageText 
-                isUser={message.role === 'user'}
-                dangerouslySetInnerHTML={{ __html: message.content }}
-              />
-              <MessageTime isUser={message.role === 'user'}>
-                {message.timestamp.toLocaleTimeString()}
-              </MessageTime>
-            </MessageContent>
-          </Message>
-        ))}
+        {messages.map((message) => {
+          const isRecipe = message.role === 'assistant' && detectRecipeInMessage(message.content);
+          
+          return (
+            <Message key={message.id} isUser={message.role === 'user'}>
+              <Avatar isUser={message.role === 'user'}>
+                {message.role === 'user' ? 'U' : 'AI'}
+              </Avatar>
+              <MessageContent isUser={message.role === 'user'}>
+                <MessageText isUser={message.role === 'user'}>
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </MessageText>
+                {isRecipe && (
+                  <MessageActions>
+                    <SaveRecipeButton onClick={() => handleSaveRecipe(message.content)}>
+                      💾 Save Recipe
+                    </SaveRecipeButton>
+                  </MessageActions>
+                )}
+                <MessageTime isUser={message.role === 'user'}>
+                  {message.timestamp.toLocaleTimeString()}
+                </MessageTime>
+              </MessageContent>
+            </Message>
+          );
+        })}
 
         {isProcessing && (
           <Message>

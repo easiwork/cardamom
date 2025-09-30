@@ -24,6 +24,7 @@
     "openai": "^4.20.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
     "styled-components": "^6.1.19",
     "uuid": "^9.0.1",
     "vite": "^7.1.7"

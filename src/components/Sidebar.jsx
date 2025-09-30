@@ -126,6 +126,25 @@ const RecipeCard = styled.div`
     border-color: #007aff;
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
   }
+
+  &.placeholder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #007aff;
+    opacity: 0.8;
+    animation: pulse 2s ease-in-out infinite;
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.9; }
+    }
+    
+    &:hover {
+      border-color: #007aff;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+      transform: translateY(-2px);
+      opacity: 1;
+    }
+  }
 `;
 
 const RecipeImage = styled.div`
@@ -252,39 +271,41 @@ const Sidebar = ({ recipes, currentRecipeId, onNewRecipe, onLoadRecipe, onDelete
           recipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
-              className={recipe.id === currentRecipeId ? 'active' : ''}
-              onClick={() => onLoadRecipe(recipe.id)}
+              className={`${recipe.id === currentRecipeId ? 'active' : ''} ${recipe.isPlaceholder ? 'placeholder' : ''}`}
+              onClick={() => !recipe.isPlaceholder && onLoadRecipe(recipe.id)}
             >
               <RecipeImage>
                 {recipe.data.imageUrl ? (
                   <img src={recipe.data.imageUrl} alt={recipe.name} />
                 ) : (
-                  '🍳'
+                  recipe.isPlaceholder ? '✨' : '🍳'
                 )}
               </RecipeImage>
               <RecipeTitle>{recipe.name}</RecipeTitle>
               <RecipeMeta>
-                <span>{new Date(recipe.timestamp).toLocaleDateString()}</span>
-                {recipe.data.originalUrl && (
+                <span>{recipe.isPlaceholder ? 'Creating...' : new Date(recipe.timestamp).toLocaleDateString()}</span>
+                {recipe.data.originalUrl && !recipe.isPlaceholder && (
                   <span title={`Saved from ${new URL(recipe.data.originalUrl).hostname}`}>
                     🌐
                   </span>
                 )}
-                <RecipeActions>
-                  <ActionButton
-                    onClick={(e) => downloadRecipe(e, recipe)}
-                    title="Download"
-                  >
-                    💾
-                  </ActionButton>
-                  <ActionButton
-                    className="delete"
-                    onClick={(e) => handleDeleteRecipe(e, recipe.id)}
-                    title="Delete"
-                  >
-                    🗑️
-                  </ActionButton>
-                </RecipeActions>
+                {!recipe.isPlaceholder && (
+                  <RecipeActions>
+                    <ActionButton
+                      onClick={(e) => downloadRecipe(e, recipe)}
+                      title="Download"
+                    >
+                      💾
+                    </ActionButton>
+                    <ActionButton
+                      className="delete"
+                      onClick={(e) => handleDeleteRecipe(e, recipe.id)}
+                      title="Delete"
+                    >
+                      🗑️
+                    </ActionButton>
+                  </RecipeActions>
+                )}
               </RecipeMeta>
             </RecipeCard>
           ))

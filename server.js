@@ -16,6 +16,16 @@ const { recipeFlowchartSchema } = require("./schemas");
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Set server timeout to handle long-running requests (recipe processing can take time)
+app.use((req, res, next) => {
+  // Set timeout to 3 minutes for recipe processing endpoints
+  if (req.path.includes('/api/process') || req.path.includes('/api/chat')) {
+    req.setTimeout(180000); // 3 minutes
+    res.setTimeout(180000); // 3 minutes
+  }
+  next();
+});
+
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -89,7 +99,9 @@ async function processCookingChat(message, conversationHistory = []) {
 
 Provide helpful, accurate, and practical advice. Be conversational and friendly. If someone asks about creating a recipe flowchart, suggest they share a recipe URL or paste recipe text.
 
-IMPORTANT: You have access to the conversation history. Use this context to provide more relevant and personalized responses. If the user is asking about a specific recipe that was mentioned earlier, refer to that recipe and provide specific advice based on the ingredients and steps that were discussed.`;
+IMPORTANT: You have access to the conversation history. Use this context to provide more relevant and personalized responses. If the user is asking about a specific recipe that was mentioned earlier, refer to that recipe and provide specific advice based on the ingredients and steps that were discussed.
+
+Avoid using HTML tags for formatting and use markdown format.`;
 
   try {
     console.log("🤖 Sending chat request to OpenAI API...");
@@ -593,7 +605,7 @@ async function scrapeRecipeFromURL(url) {
         console.log(`🔄 Attempt ${i + 1}/${userAgents.length} with User-Agent: ${userAgents[i].substring(0, 50)}...`);
         
         response = await axios.get(url, {
-          timeout: 15000,
+          timeout: 30000, // Increased to 30 seconds for URL scraping
           headers: {
             "User-Agent": userAgents[i],
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",

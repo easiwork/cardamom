@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "dev:react": "vite",
-    "build": "vite build",
+    "build": "vite build && sudo chown -R www-data:www-data dist/images",
     "preview": "vite preview"
   },
   "dependencies": {

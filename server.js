@@ -19,7 +19,7 @@ const port = process.env.PORT || 3000;
 // Set server timeout to handle long-running requests (recipe processing can take time)
 app.use((req, res, next) => {
   // Set timeout to 3 minutes for recipe processing endpoints
-  if (req.path.includes('/api/process') || req.path.includes('/api/chat')) {
+  if (req.path.includes("/api/process") || req.path.includes("/api/chat")) {
     req.setTimeout(180000); // 3 minutes
     res.setTimeout(180000); // 3 minutes
   }
@@ -35,12 +35,11 @@ const openai = new OpenAI({
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-// Serve static files - React build in production, public folder in development
-if (process.env.NODE_ENV === 'production') {
+// Serve static files - React build in production, Vite serves in development
+if (process.env.NODE_ENV === "production") {
   app.use(express.static("dist"));
-} else {
-  app.use(express.static("public"));
 }
+// In development, Vite dev server handles static file serving
 
 // Device ID middleware - ensures each device has a unique identifier
 app.use((req, res, next) => {
@@ -208,10 +207,10 @@ async function generateRecipeImage(recipeData) {
 
         // Create images directory if it doesn't exist
         let imagesDir;
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NODE_ENV === "production") {
           imagesDir = path.join(__dirname, "dist", "images");
         } else {
-          imagesDir = path.join(__dirname, "public", "images");
+          imagesDir = path.join(__dirname, "dist", "images");
         }
 
         if (!fs.existsSync(imagesDir)) {
@@ -253,71 +252,90 @@ async function generateRecipeImage(recipeData) {
 function analyzeMermaidError(error, mermaidCode) {
   const errorMessage = error.message || error.toString();
   const suggestions = [];
-  
+
   console.log("🔍 Analyzing Mermaid error:", errorMessage);
   console.log("📝 Problematic code:", mermaidCode);
-  
+
   // Common error patterns and fixes
-  if (errorMessage.includes("Parse error") || errorMessage.includes("syntax error")) {
+  if (
+    errorMessage.includes("Parse error") ||
+    errorMessage.includes("syntax error")
+  ) {
     suggestions.push("Fix syntax errors in the diagram");
-    
+
     // Check for common syntax issues
     if (mermaidCode.includes("  ") || mermaidCode.includes("\t")) {
       suggestions.push("Remove extra spaces or tabs - use single spaces only");
     }
-    
+
     if (mermaidCode.includes("--") && !mermaidCode.includes("-->")) {
       suggestions.push("Use '-->' for connections, not '--'");
     }
-    
-    if (mermaidCode.includes(":::") || mermaidCode.includes("classDef") && mermaidCode.indexOf("classDef") < mermaidCode.indexOf("class ")) {
-      suggestions.push("Move all classDef statements to the end, after all node definitions and connections");
+
+    if (
+      mermaidCode.includes(":::") ||
+      (mermaidCode.includes("classDef") &&
+        mermaidCode.indexOf("classDef") < mermaidCode.indexOf("class "))
+    ) {
+      suggestions.push(
+        "Move all classDef statements to the end, after all node definitions and connections"
+      );
     }
   }
-  
+
   if (errorMessage.includes("node") && errorMessage.includes("not found")) {
-    suggestions.push("Ensure all node IDs referenced in connections are defined");
+    suggestions.push(
+      "Ensure all node IDs referenced in connections are defined"
+    );
     suggestions.push("Check for typos in node IDs");
   }
-  
+
   if (errorMessage.includes("class") && errorMessage.includes("not defined")) {
     suggestions.push("Define all classes with classDef before using them");
-    suggestions.push("Use only the predefined classes: ingredient, action, final");
+    suggestions.push(
+      "Use only the predefined classes: ingredient, action, final"
+    );
   }
-  
+
   if (mermaidCode.includes(" ") && /[A-Z]/.test(mermaidCode)) {
     suggestions.push("Replace spaces in node IDs with underscores");
     suggestions.push("Use only lowercase letters and underscores for node IDs");
   }
-  
+
   if (mermaidCode.includes("-") && !mermaidCode.includes("-->")) {
     suggestions.push("Replace hyphens in node IDs with underscores");
   }
-  
+
   // Check for missing required elements
   if (!mermaidCode.includes("graph TD")) {
     suggestions.push("Start the diagram with 'graph TD;'");
   }
-  
+
   if (!mermaidCode.includes("classDef")) {
     suggestions.push("Add classDef statements for styling");
   }
-  
+
   if (!mermaidCode.includes("class ")) {
     suggestions.push("Add class statements to apply styles to nodes");
   }
-  
+
   return {
     error: errorMessage,
     suggestions: suggestions,
-    problematicCode: mermaidCode
+    problematicCode: mermaidCode,
   };
 }
 
 // Enhanced Mermaid generation with retry logic
-async function generateMermaidWithRetry(recipeText, ingredients, actions, attempt = 1, maxAttempts = 3) {
+async function generateMermaidWithRetry(
+  recipeText,
+  ingredients,
+  actions,
+  attempt = 1,
+  maxAttempts = 3
+) {
   console.log(`🔄 Mermaid generation attempt ${attempt}/${maxAttempts}`);
-  
+
   const systemPrompt = `You are a culinary expert who transforms recipes into structured flowcharts. 
 
 Your task is to analyze a recipe and create a Mermaid flowchart that shows:
@@ -382,11 +400,23 @@ Return the response in the exact JSON schema format with:
 
 Focus on the logical flow and timing of the cooking process. Make sure to extract and include the exact quantities for each ingredient as specified in the recipe.
 
-${attempt > 1 ? `\n\nIMPORTANT: This is attempt ${attempt}. The previous attempt failed with the following issues:
-${ingredients && ingredients.length > 0 ? `Previous ingredients: ${JSON.stringify(ingredients, null, 2)}` : ''}
-${actions && actions.length > 0 ? `Previous actions: ${JSON.stringify(actions, null, 2)}` : ''}
+${
+  attempt > 1
+    ? `\n\nIMPORTANT: This is attempt ${attempt}. The previous attempt failed with the following issues:
+${
+  ingredients && ingredients.length > 0
+    ? `Previous ingredients: ${JSON.stringify(ingredients, null, 2)}`
+    : ""
+}
+${
+  actions && actions.length > 0
+    ? `Previous actions: ${JSON.stringify(actions, null, 2)}`
+    : ""
+}
 
-Please fix the Mermaid diagram syntax issues and ensure it follows the exact requirements above.` : ''}`;
+Please fix the Mermaid diagram syntax issues and ensure it follows the exact requirements above.`
+    : ""
+}`;
 
   try {
     console.log("🤖 Sending request to OpenAI API...");
@@ -416,74 +446,85 @@ Please fix the Mermaid diagram syntax issues and ensure it follows the exact req
     );
 
     const result = JSON.parse(completion.choices[0].message.content);
-    
+
     // Validate Mermaid syntax
     if (result.mermaidDiagram) {
       console.log("🔍 Validating Mermaid syntax...");
       try {
         // Basic syntax validation
         const mermaidCode = result.mermaidDiagram.trim();
-        
+
         // Check for required elements
-        if (!mermaidCode.startsWith('graph TD')) {
+        if (!mermaidCode.startsWith("graph TD")) {
           throw new Error("Diagram must start with 'graph TD'");
         }
-        
-        if (!mermaidCode.includes('classDef')) {
+
+        if (!mermaidCode.includes("classDef")) {
           throw new Error("Missing classDef statements");
         }
-        
-        if (!mermaidCode.includes('class ')) {
+
+        if (!mermaidCode.includes("class ")) {
           throw new Error("Missing class statements");
         }
-        
+
         // Check for common syntax issues
-        const lines = mermaidCode.split('\n');
+        const lines = mermaidCode.split("\n");
         for (const line of lines) {
           const trimmedLine = line.trim();
-          if (trimmedLine && !trimmedLine.endsWith(';') && !trimmedLine.includes('-->') && !trimmedLine.includes('classDef') && !trimmedLine.includes('class ')) {
+          if (
+            trimmedLine &&
+            !trimmedLine.endsWith(";") &&
+            !trimmedLine.includes("-->") &&
+            !trimmedLine.includes("classDef") &&
+            !trimmedLine.includes("class ")
+          ) {
             console.warn(`⚠️ Line may be missing semicolon: ${trimmedLine}`);
           }
         }
-        
+
         console.log("✅ Mermaid syntax validation passed");
         return result;
-        
       } catch (validationError) {
         console.error("❌ Mermaid validation failed:", validationError.message);
-        
+
         if (attempt < maxAttempts) {
           console.log(`🔄 Retrying with validation error feedback...`);
-          const errorAnalysis = analyzeMermaidError(validationError, result.mermaidDiagram);
+          const errorAnalysis = analyzeMermaidError(
+            validationError,
+            result.mermaidDiagram
+          );
           return await generateMermaidWithRetry(
-            recipeText, 
-            result.ingredients, 
-            result.actions, 
-            attempt + 1, 
+            recipeText,
+            result.ingredients,
+            result.actions,
+            attempt + 1,
             maxAttempts
           );
         } else {
-          throw new Error(`Mermaid validation failed after ${maxAttempts} attempts: ${validationError.message}`);
+          throw new Error(
+            `Mermaid validation failed after ${maxAttempts} attempts: ${validationError.message}`
+          );
         }
       }
     }
-    
+
     return result;
-    
   } catch (error) {
     console.error(`❌ OpenAI API Error (attempt ${attempt}):`, error);
-    
+
     if (attempt < maxAttempts) {
       console.log(`🔄 Retrying due to API error...`);
       return await generateMermaidWithRetry(
-        recipeText, 
-        ingredients, 
-        actions, 
-        attempt + 1, 
+        recipeText,
+        ingredients,
+        actions,
+        attempt + 1,
         maxAttempts
       );
     } else {
-      throw new Error(`Failed to process recipe with OpenAI after ${maxAttempts} attempts: ${error.message}`);
+      throw new Error(
+        `Failed to process recipe with OpenAI after ${maxAttempts} attempts: ${error.message}`
+      );
     }
   }
 }
@@ -497,7 +538,7 @@ async function processRecipeToFlowchart(recipeText) {
   try {
     // Use the enhanced Mermaid generation with retry logic
     const result = await generateMermaidWithRetry(recipeText);
-    
+
     console.log("📋 Parsed result structure:");
     console.log(`  - Recipe name: "${result.recipeName || "Not provided"}"`);
     console.log(`  - Ingredients: ${result.ingredients?.length || 0} items`);
@@ -594,7 +635,7 @@ async function scrapeRecipeFromURL(url) {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
     ];
 
     let response;
@@ -602,44 +643,52 @@ async function scrapeRecipeFromURL(url) {
 
     for (let i = 0; i < userAgents.length; i++) {
       try {
-        console.log(`🔄 Attempt ${i + 1}/${userAgents.length} with User-Agent: ${userAgents[i].substring(0, 50)}...`);
-        
+        console.log(
+          `🔄 Attempt ${i + 1}/${
+            userAgents.length
+          } with User-Agent: ${userAgents[i].substring(0, 50)}...`
+        );
+
         response = await axios.get(url, {
           timeout: 30000, // Increased to 30 seconds for URL scraping
           headers: {
             "User-Agent": userAgents[i],
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
-            "DNT": "1",
-            "Connection": "keep-alive",
+            DNT: "1",
+            Connection: "keep-alive",
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "none",
-            "Cache-Control": "max-age=0"
+            "Cache-Control": "max-age=0",
           },
           maxRedirects: 5,
           validateStatus: function (status) {
             return status >= 200 && status < 400; // Accept redirects
-          }
+          },
         });
-        
+
         console.log(`✅ Success with attempt ${i + 1}`);
         break; // Success, exit the loop
-        
       } catch (error) {
         lastError = error;
-        console.log(`❌ Attempt ${i + 1} failed: ${error.response?.status} ${error.response?.statusText || error.message}`);
-        
+        console.log(
+          `❌ Attempt ${i + 1} failed: ${error.response?.status} ${
+            error.response?.statusText || error.message
+          }`
+        );
+
         // If we get a 403, try the next user agent
         if (error.response?.status === 403 && i < userAgents.length - 1) {
           console.log(`🔄 403 Forbidden, trying next user agent...`);
           // Add a small delay between attempts
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        
+
         // If it's not a 403 or we've tried all user agents, throw the error
         throw error;
       }
@@ -809,10 +858,11 @@ async function scrapeRecipeFromURL(url) {
 
 // Routes
 app.get("/", (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "dist", "index.html"));
   } else {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    // In development, Vite dev server handles the main page
+    res.redirect("http://localhost:3001");
   }
 });
 
@@ -1242,17 +1292,19 @@ app.get("/*", (req, res) => {
   ) {
     console.log(`🔗 Recipe URL detected in path: ${urlPath}`);
     // Serve the main page - the frontend will handle the URL processing
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     } else {
-      res.sendFile(path.join(__dirname, "public", "index.html"));
+      // In development, redirect to Vite dev server
+      res.redirect("http://localhost:3001");
     }
   } else {
     // For any other path, serve the main page
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     } else {
-      res.sendFile(path.join(__dirname, "public", "index.html"));
+      // In development, redirect to Vite dev server
+      res.redirect("http://localhost:3001");
     }
   }
 });

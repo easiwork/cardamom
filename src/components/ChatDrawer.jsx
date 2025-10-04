@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useRef, useEffect } from "react";
+import styled, { keyframes } from "styled-components";
+import ReactMarkdown from "react-markdown";
 
 const slideIn = keyframes`
   from {
@@ -33,7 +33,7 @@ const typing = keyframes`
 
 const Drawer = styled.div`
   position: fixed;
-  right: ${props => props.isOpen ? '0' : '-400px'};
+  right: ${(props) => (props.isOpen ? "0" : "-400px")};
   top: 0;
   width: 400px;
   height: 100vh;
@@ -48,7 +48,7 @@ const Drawer = styled.div`
 
   @media (max-width: 768px) {
     width: 100vw;
-    right: ${props => props.isOpen ? '0' : '-100vw'};
+    right: ${(props) => (props.isOpen ? "0" : "-100vw")};
   }
 `;
 
@@ -106,7 +106,7 @@ const Message = styled.div`
   display: flex;
   gap: 16px;
   max-width: 100%;
-  flex-direction: ${props => props.isUser ? 'row-reverse' : 'row'};
+  flex-direction: ${(props) => (props.isUser ? "row-reverse" : "row")};
 `;
 
 const Avatar = styled.div`
@@ -119,14 +119,14 @@ const Avatar = styled.div`
   font-size: 0.9em;
   font-weight: 600;
   flex-shrink: 0;
-  background: ${props => props.isUser ? '#007aff' : '#34c759'};
+  background: ${(props) => (props.isUser ? "#007aff" : "#34c759")};
   color: white;
 `;
 
 const MessageContent = styled.div`
   flex: 1;
   max-width: calc(100% - 48px);
-  text-align: ${props => props.isUser ? 'right' : 'left'};
+  text-align: ${(props) => (props.isUser ? "right" : "left")};
 `;
 
 const MessageText = styled.div`
@@ -137,23 +137,40 @@ const MessageText = styled.div`
   line-height: 1.5;
   word-wrap: break-word;
   border: 1px solid #e5e5e7;
-  background: ${props => props.isUser ? '#007aff' : '#f2f2f7'};
-  border-color: ${props => props.isUser ? '#007aff' : '#e5e5e7'};
-  color: ${props => props.isUser ? 'white' : '#1d1d1f'};
+  background: ${(props) => (props.isUser ? "#007aff" : "#f2f2f7")};
+  border-color: ${(props) => (props.isUser ? "#007aff" : "#e5e5e7")};
+  color: ${(props) => (props.isUser ? "white" : "#1d1d1f")};
 
   /* Markdown element styles */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     margin: 0 0 12px 0;
     font-weight: 600;
     line-height: 1.3;
   }
 
-  h1 { font-size: 1.3em; }
-  h2 { font-size: 1.2em; }
-  h3 { font-size: 1.1em; }
-  h4 { font-size: 1em; }
-  h5 { font-size: 0.95em; }
-  h6 { font-size: 0.9em; }
+  h1 {
+    font-size: 1.3em;
+  }
+  h2 {
+    font-size: 1.2em;
+  }
+  h3 {
+    font-size: 1.1em;
+  }
+  h4 {
+    font-size: 1em;
+  }
+  h5 {
+    font-size: 0.95em;
+  }
+  h6 {
+    font-size: 0.9em;
+  }
 
   p {
     margin: 0 0 12px 0;
@@ -164,7 +181,8 @@ const MessageText = styled.div`
     margin-bottom: 0;
   }
 
-  ul, ol {
+  ul,
+  ol {
     margin: 0 0 12px 0;
     padding-left: 20px;
   }
@@ -174,11 +192,13 @@ const MessageText = styled.div`
     line-height: 1.4;
   }
 
-  strong, b {
+  strong,
+  b {
     font-weight: 600;
   }
 
-  em, i {
+  em,
+  i {
     font-style: italic;
   }
 
@@ -186,7 +206,7 @@ const MessageText = styled.div`
     background: rgba(0, 0, 0, 0.1);
     padding: 2px 6px;
     border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
     font-size: 0.9em;
   }
 
@@ -197,7 +217,7 @@ const MessageText = styled.div`
     overflow-x: auto;
     margin: 12px 0;
     white-space: pre-wrap;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
     font-size: 0.9em;
     line-height: 1.4;
   }
@@ -226,7 +246,8 @@ const MessageText = styled.div`
     margin: 12px 0;
   }
 
-  th, td {
+  th,
+  td {
     border: 1px solid rgba(0, 0, 0, 0.2);
     padding: 8px 12px;
     text-align: left;
@@ -243,7 +264,7 @@ const MessageTime = styled.div`
   color: #86868b;
   margin-top: 8px;
   padding: 0 4px;
-  text-align: ${props => props.isUser ? 'right' : 'left'};
+  text-align: ${(props) => (props.isUser ? "right" : "left")};
 `;
 
 const TypingIndicator = styled.div`
@@ -269,11 +290,14 @@ const TypingDot = styled.div`
   background: #86868b;
   border-radius: 50%;
   animation: ${typing} 1.4s infinite ease-in-out;
-  animation-delay: ${props => {
+  animation-delay: ${(props) => {
     switch (props.delay) {
-      case 1: return '-0.32s';
-      case 2: return '-0.16s';
-      default: return '0s';
+      case 1:
+        return "-0.32s";
+      case 2:
+        return "-0.16s";
+      default:
+        return "0s";
     }
   }};
 `;
@@ -454,18 +478,45 @@ const MessageActions = styled.div`
 // Utility function to detect if a message contains a recipe
 const detectRecipeInMessage = (content) => {
   const text = content.toLowerCase();
-  
+
   // Check for recipe indicators
-  const hasIngredients = text.includes('ingredients') || text.includes('ingredient');
-  const hasInstructions = text.includes('instructions') || text.includes('directions') || text.includes('steps') || text.includes('method');
-  const hasRecipeKeywords = ['cook', 'bake', 'fry', 'boil', 'mix', 'combine', 'add', 'stir', 'whisk', 'beat'].some(keyword => text.includes(keyword));
-  const hasMeasurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'gram', 'ml', 'tbsp', 'tsp'].some(unit => text.includes(unit));
-  
+  const hasIngredients =
+    text.includes("ingredients") || text.includes("ingredient");
+  const hasInstructions =
+    text.includes("instructions") ||
+    text.includes("directions") ||
+    text.includes("steps") ||
+    text.includes("method");
+  const hasRecipeKeywords = [
+    "cook",
+    "bake",
+    "fry",
+    "boil",
+    "mix",
+    "combine",
+    "add",
+    "stir",
+    "whisk",
+    "beat",
+  ].some((keyword) => text.includes(keyword));
+  const hasMeasurements = [
+    "cup",
+    "tablespoon",
+    "teaspoon",
+    "pound",
+    "ounce",
+    "gram",
+    "ml",
+    "tbsp",
+    "tsp",
+  ].some((unit) => text.includes(unit));
+
   // Recipe detection criteria
-  const isRecipe = (hasIngredients && hasInstructions) || 
-                   (hasIngredients && hasRecipeKeywords && hasMeasurements) ||
-                   (hasInstructions && hasRecipeKeywords && hasMeasurements);
-  
+  const isRecipe =
+    (hasIngredients && hasInstructions) ||
+    (hasIngredients && hasRecipeKeywords && hasMeasurements) ||
+    (hasInstructions && hasRecipeKeywords && hasMeasurements);
+
   return isRecipe;
 };
 
@@ -473,76 +524,102 @@ const detectRecipeInMessage = (content) => {
 const extractRecipeFromMessage = (content) => {
   try {
     // Try to parse structured recipe data if it's in a specific format
-    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-    
-    let recipeName = 'Chat Recipe';
+    const lines = content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line);
+
+    let recipeName = "Chat Recipe";
     let ingredients = [];
     let actions = [];
-    
+
     // Extract recipe name (usually the first line or after a #)
     const nameMatch = content.match(/^#\s*(.+)$/m) || content.match(/^(.+)$/m);
     if (nameMatch) {
       recipeName = nameMatch[1].trim();
     }
-    
+
     // Extract ingredients
-    const ingredientsSection = content.match(/ingredients?[:\s]*([\s\S]*?)(?=instructions?|directions?|steps?|method|$)/i);
+    const ingredientsSection = content.match(
+      /ingredients?[:\s]*([\s\S]*?)(?=instructions?|directions?|steps?|method|$)/i
+    );
     if (ingredientsSection) {
-      const ingredientLines = ingredientsSection[1].split('\n')
-        .map(line => line.trim())
-        .filter(line => line && (line.startsWith('-') || line.startsWith('*') || line.match(/^\d/)));
-      
-      ingredients = ingredientLines.map(line => {
+      const ingredientLines = ingredientsSection[1]
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            line &&
+            (line.startsWith("-") || line.startsWith("*") || line.match(/^\d/))
+        );
+
+      ingredients = ingredientLines.map((line) => {
         // Remove bullet points and numbers
-        const cleanLine = line.replace(/^[-*\d.\s]+/, '').trim();
+        const cleanLine = line.replace(/^[-*\d.\s]+/, "").trim();
         // Try to extract quantity and name
         const match = cleanLine.match(/^(.+?)\s+(.+)$/);
         if (match) {
           return { quantity: match[1].trim(), name: match[2].trim() };
         }
-        return { quantity: '', name: cleanLine };
+        return { quantity: "", name: cleanLine };
       });
     }
-    
+
     // Extract instructions/actions
-    const instructionsSection = content.match(/(?:instructions?|directions?|steps?|method)[:\s]*([\s\S]*?)$/i);
+    const instructionsSection = content.match(
+      /(?:instructions?|directions?|steps?|method)[:\s]*([\s\S]*?)$/i
+    );
     if (instructionsSection) {
-      const instructionLines = instructionsSection[1].split('\n')
-        .map(line => line.trim())
-        .filter(line => line && (line.match(/^\d+\./) || line.startsWith('-') || line.startsWith('*')));
-      
+      const instructionLines = instructionsSection[1]
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            line &&
+            (line.match(/^\d+\./) ||
+              line.startsWith("-") ||
+              line.startsWith("*"))
+        );
+
       actions = instructionLines.map((line, index) => {
         // Remove numbering and bullet points
-        const cleanLine = line.replace(/^[-*\d.\s]+/, '').trim();
-        return { action: cleanLine, time: '5 min' }; // Default time
+        const cleanLine = line.replace(/^[-*\d.\s]+/, "").trim();
+        return { action: cleanLine, time: "5 min" }; // Default time
       });
     }
-    
+
     // If we couldn't extract structured data, create a simple recipe
     if (ingredients.length === 0 && actions.length === 0) {
       // Fallback: treat the entire content as a recipe
-      const allLines = lines.filter(line => line.length > 10);
+      const allLines = lines.filter((line) => line.length > 10);
       if (allLines.length > 0) {
         recipeName = allLines[0];
         // Try to identify ingredients and instructions from the text
         const text = content.toLowerCase();
-        if (text.includes('ingredients') || text.includes('ingredient')) {
+        if (text.includes("ingredients") || text.includes("ingredient")) {
           // This looks like a recipe, create a basic structure
-          ingredients = [{ quantity: 'As needed', name: 'See full recipe below' }];
-          actions = [{ action: 'Follow the detailed instructions in the chat message', time: 'Varies' }];
+          ingredients = [
+            { quantity: "As needed", name: "See full recipe below" },
+          ];
+          actions = [
+            {
+              action: "Follow the detailed instructions in the chat message",
+              time: "Varies",
+            },
+          ];
         }
       }
     }
-    
+
     return {
       recipeName,
       ingredients,
       actions,
       mermaidDiagram: generateSimpleMermaidDiagram(actions),
-      imageUrl: null
+      imageUrl: null,
     };
   } catch (error) {
-    console.error('Error extracting recipe from message:', error);
+    console.error("Error extracting recipe from message:", error);
     return null;
   }
 };
@@ -550,32 +627,48 @@ const extractRecipeFromMessage = (content) => {
 // Generate a simple mermaid diagram from actions
 const generateSimpleMermaidDiagram = (actions) => {
   if (!actions || actions.length === 0) {
-    return 'graph TD\n    A[Start] --> B[Follow Instructions]';
+    return "graph TD\n    A[Start] --> B[Follow Instructions]";
   }
-  
-  const nodes = actions.map((action, index) => {
-    const nodeId = String.fromCharCode(65 + index); // A, B, C, etc.
-    const actionText = action.action.length > 30 ? action.action.substring(0, 30) + '...' : action.action;
-    return `${nodeId}["${actionText}"]`;
-  }).join('\n    ');
-  
-  const connections = actions.map((_, index) => {
-    if (index === 0) return '';
-    const fromNode = String.fromCharCode(65 + index - 1);
-    const toNode = String.fromCharCode(65 + index);
-    return `    ${fromNode} --> ${toNode}`;
-  }).filter(conn => conn).join('\n');
-  
+
+  const nodes = actions
+    .map((action, index) => {
+      const nodeId = String.fromCharCode(65 + index); // A, B, C, etc.
+      const actionText =
+        action.action.length > 30
+          ? action.action.substring(0, 30) + "..."
+          : action.action;
+      return `${nodeId}["${actionText}"]`;
+    })
+    .join("\n    ");
+
+  const connections = actions
+    .map((_, index) => {
+      if (index === 0) return "";
+      const fromNode = String.fromCharCode(65 + index - 1);
+      const toNode = String.fromCharCode(65 + index);
+      return `    ${fromNode} --> ${toNode}`;
+    })
+    .filter((conn) => conn)
+    .join("\n");
+
   return `graph TD\n    ${nodes}\n${connections}`;
 };
 
-const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, onNewChat, onSaveRecipe }) => {
-  const [inputValue, setInputValue] = useState('');
+const ChatDrawer = ({
+  isOpen,
+  onClose,
+  messages,
+  isProcessing,
+  onSendMessage,
+  onNewChat,
+  onSaveRecipe,
+}) => {
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -590,13 +683,13 @@ const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, on
 
   const handleSend = () => {
     if (!inputValue.trim() || isProcessing) return;
-    
+
     onSendMessage(inputValue.trim());
-    setInputValue('');
+    setInputValue("");
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -605,8 +698,8 @@ const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, on
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
     // Auto-resize textarea
-    e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+    e.target.style.height = "auto";
+    e.target.style.height = Math.min(e.target.scrollHeight, 200) + "px";
   };
 
   const handleExampleClick = (message) => {
@@ -616,16 +709,16 @@ const ChatDrawer = ({ isOpen, onClose, messages, isProcessing, onSendMessage, on
 
   const handleSaveRecipe = (messageContent) => {
     if (!onSaveRecipe) {
-      console.error('onSaveRecipe callback not provided');
+      console.error("onSaveRecipe callback not provided");
       return;
     }
 
     const recipeData = extractRecipeFromMessage(messageContent);
     if (recipeData) {
-      console.log('🍳 Extracted recipe data:', recipeData);
+      console.log("🍳 Extracted recipe data:", recipeData);
       onSaveRecipe(recipeData);
     } else {
-      console.error('Failed to extract recipe data from message');
+      console.error("Failed to extract recipe data from message");
     }
   };
 
@@ -666,7 +759,7 @@ Instructions:
   return (
     <Drawer isOpen={isOpen}>
       <Header>
-        <Title>Cooking Assistant</Title>
+        <Title>Su Chef</Title>
         <CloseButton onClick={onClose}>×</CloseButton>
       </Header>
 
@@ -675,23 +768,42 @@ Instructions:
           <WelcomeMessage>
             <h3>🌿 Welcome to Cardamom</h3>
             <p>
-              Your personal recipe vault and cooking companion! Save recipes, get cooking tips, 
-              ingredient substitutions, and create beautiful flowcharts from your recipes. 
-              Let's explore the culinary world together!
+              Your personal recipe vault and cooking companion! Save recipes,
+              get cooking tips, ingredient substitutions, and create beautiful
+              flowcharts from your recipes. Let's explore the culinary world
+              together!
             </p>
 
             <ExamplesGrid>
-              <ExampleCard onClick={() => handleExampleClick('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/')}>
+              <ExampleCard
+                onClick={() =>
+                  handleExampleClick(
+                    "https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/"
+                  )
+                }
+              >
                 <h4>🌐 Recipe URL</h4>
                 <p>Share a recipe URL to create a flowchart</p>
               </ExampleCard>
 
-              <ExampleCard onClick={() => handleExampleClick('Classic Chocolate Chip Cookies\n\nIngredients:\n- 2 1/4 cups all-purpose flour\n- 1 tsp baking soda\n- 1 tsp salt\n- 1 cup butter, softened\n- 3/4 cup granulated sugar\n- 3/4 cup brown sugar\n- 2 large eggs\n- 2 tsp vanilla extract\n- 2 cups chocolate chips\n\nInstructions:\n1. Preheat oven to 375°F\n2. Mix flour, baking soda, and salt\n3. Cream butter and sugars\n4. Beat in eggs and vanilla\n5. Gradually blend in flour mixture\n6. Stir in chocolate chips\n7. Drop rounded tablespoons onto ungreased cookie sheets\n8. Bake 9-11 minutes until golden brown')}>
+              <ExampleCard
+                onClick={() =>
+                  handleExampleClick(
+                    "Classic Chocolate Chip Cookies\n\nIngredients:\n- 2 1/4 cups all-purpose flour\n- 1 tsp baking soda\n- 1 tsp salt\n- 1 cup butter, softened\n- 3/4 cup granulated sugar\n- 3/4 cup brown sugar\n- 2 large eggs\n- 2 tsp vanilla extract\n- 2 cups chocolate chips\n\nInstructions:\n1. Preheat oven to 375°F\n2. Mix flour, baking soda, and salt\n3. Cream butter and sugars\n4. Beat in eggs and vanilla\n5. Gradually blend in flour mixture\n6. Stir in chocolate chips\n7. Drop rounded tablespoons onto ungreased cookie sheets\n8. Bake 9-11 minutes until golden brown"
+                  )
+                }
+              >
                 <h4>📝 Recipe Text</h4>
                 <p>Paste a recipe to create a flowchart</p>
               </ExampleCard>
 
-              <ExampleCard onClick={() => handleExampleClick('What are some good substitutes for eggs in baking?')}>
+              <ExampleCard
+                onClick={() =>
+                  handleExampleClick(
+                    "What are some good substitutes for eggs in baking?"
+                  )
+                }
+              >
                 <h4>💡 Cooking Tips</h4>
                 <p>Ask me about cooking techniques and substitutions</p>
               </ExampleCard>
@@ -705,25 +817,29 @@ Instructions:
         )}
 
         {messages.map((message) => {
-          const isRecipe = message.role === 'assistant' && detectRecipeInMessage(message.content);
-          
+          const isRecipe =
+            message.role === "assistant" &&
+            detectRecipeInMessage(message.content);
+
           return (
-            <Message key={message.id} isUser={message.role === 'user'}>
-              <Avatar isUser={message.role === 'user'}>
-                {message.role === 'user' ? 'U' : 'AI'}
+            <Message key={message.id} isUser={message.role === "user"}>
+              <Avatar isUser={message.role === "user"}>
+                {message.role === "user" ? "U" : "AI"}
               </Avatar>
-              <MessageContent isUser={message.role === 'user'}>
-                <MessageText isUser={message.role === 'user'}>
+              <MessageContent isUser={message.role === "user"}>
+                <MessageText isUser={message.role === "user"}>
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </MessageText>
                 {isRecipe && (
                   <MessageActions>
-                    <SaveRecipeButton onClick={() => handleSaveRecipe(message.content)}>
+                    <SaveRecipeButton
+                      onClick={() => handleSaveRecipe(message.content)}
+                    >
                       💾 Save Recipe
                     </SaveRecipeButton>
                   </MessageActions>
                 )}
-                <MessageTime isUser={message.role === 'user'}>
+                <MessageTime isUser={message.role === "user"}>
                   {message.timestamp.toLocaleTimeString()}
                 </MessageTime>
               </MessageContent>
@@ -761,8 +877,11 @@ Instructions:
             rows="1"
             disabled={isProcessing}
           />
-          <SendButton onClick={handleSend} disabled={isProcessing || !inputValue.trim()}>
-            {isProcessing ? '⏳' : '→'}
+          <SendButton
+            onClick={handleSend}
+            disabled={isProcessing || !inputValue.trim()}
+          >
+            {isProcessing ? "⏳" : "→"}
           </SendButton>
         </InputWrapper>
       </InputContainer>

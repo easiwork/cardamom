@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.21.0",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "axios": "^1.12.2",
     "cheerio": "^1.0.0-rc.12",
     "cookie-parser": "^1.4.6",
@@ -27,7 +27,7 @@
     "react-markdown": "^10.1.0",
     "styled-components": "^6.1.19",
     "uuid": "^9.0.1",
-    "vite": "^7.1.7"
+    "vite": "^4.5.14"
   },
   "devDependencies": {
     "@types/react": "^19.1.14",
